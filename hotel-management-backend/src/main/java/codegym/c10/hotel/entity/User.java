@@ -1,4 +1,30 @@
 package codegym.c10.hotel.entity;
 
-public class User {
+import jakarta.persistence.*;
+import lombok.*;
+
+@EqualsAndHashCode(callSuper = true)
+@Entity
+@Table(name = "users")
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class User extends BaseEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true, length = 50)
+    private String username;
+
+    @Column(name = "password_hash", nullable = false, length = 255)
+    private String passwordHash;
+
+    @Column(nullable = false, unique = true, length = 100)
+    private String email;
+
+    @Column(name = "is_locked")
+    private Boolean isLocked = false;
 }
