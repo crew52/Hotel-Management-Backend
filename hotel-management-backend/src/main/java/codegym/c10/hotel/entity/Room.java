@@ -31,8 +31,8 @@ public class Room extends BaseEntity {
     private LocalDate startDate;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 20)
-    private RoomStatus status = RoomStatus.AVAILABLE;
+    @Column(name = "status", columnDefinition = "ENUM('AVAILABLE', 'MAINTENANCE', 'OCCUPIED') DEFAULT 'AVAILABLE'")
+    private RoomStatus status;
 
     @Column(columnDefinition = "TEXT")
     private String note;
