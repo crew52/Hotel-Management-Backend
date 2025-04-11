@@ -68,8 +68,8 @@ public class RoomCategory extends BaseEntity {
     private Integer maxChildCapacity = 1;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 10)
-    private RoomCategoryStatus status = RoomCategoryStatus.ACTIVE;
+    @Column(name = "status", columnDefinition = "ENUM('ACTIVE', 'INACTIVE') DEFAULT 'ACTIVE'")
+    private RoomCategoryStatus status;
 
     @Column(name = "img_url", length = 255)
     private String imgUrl;
