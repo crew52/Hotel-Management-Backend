@@ -3,6 +3,8 @@ package codegym.c10.hotel.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.Set;
+
 @EqualsAndHashCode(callSuper = true)
 @Entity
 @Table(name = "users")
@@ -27,4 +29,12 @@ public class User extends BaseEntity {
 
     @Column(name = "is_locked")
     private Boolean isLocked = false;
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_role",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "role_id")
+    )
+    private Set<Role> roles;
 }
