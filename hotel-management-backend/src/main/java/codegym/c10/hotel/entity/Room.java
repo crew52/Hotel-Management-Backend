@@ -8,7 +8,7 @@ import java.time.LocalDate;
 
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "room")
+@Table(name = "rooms")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
