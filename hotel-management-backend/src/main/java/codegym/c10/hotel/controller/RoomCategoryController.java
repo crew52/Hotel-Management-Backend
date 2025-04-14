@@ -2,6 +2,7 @@ package codegym.c10.hotel.controller;
 
 import codegym.c10.hotel.entity.RoomCategory;
 import codegym.c10.hotel.exception.ErrorResponse;
+import codegym.c10.hotel.exception.RoomCategoryHandler;
 import codegym.c10.hotel.service.IRoomCategoryService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -22,6 +23,12 @@ public class RoomCategoryController {
 
     @Autowired
     private IRoomCategoryService roomCategoryService;
+
+    private final RoomCategoryHandler roomCategoryHandler;
+
+    public RoomCategoryController(RoomCategoryHandler roomCategoryFacade) {
+        this.roomCategoryHandler = roomCategoryFacade;
+    }
 
     @GetMapping()
     public ResponseEntity<Iterable<RoomCategory>> findAllRoomCategories() {
@@ -50,61 +57,16 @@ public class RoomCategoryController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createRoomCategory(@Valid @RequestBody RoomCategory roomCategory, BindingResult bindingResult) {
-        Map<String, String> errors = new HashMap<>();
-
-        // Validation errors
-        if (bindingResult.hasErrors()) {
-            bindingResult.getFieldErrors().forEach(error ->
-                    errors.put(error.getField(), error.getDefaultMessage())
-            );
-        }
-
-        // Check duplicate code
-        if (roomCategoryService.existsByCode(roomCategory.getCode())) {
-            errors.put("code", "Room category code already exists");
-        }
-
-        if (!errors.isEmpty()) {
-            return new ResponseEntity<>(new ErrorResponse("Validation failed", errors), HttpStatus.BAD_REQUEST);
-        }
-
-        RoomCategory savedCategory = roomCategoryService.save(roomCategory);
-        return new ResponseEntity<>(savedCategory, HttpStatus.CREATED);
+    public ResponseEntity<?> createRoomCategory(@Valid @RequestBody RoomCategory roomCategory,
+                                                BindingResult bindingResult) {
+        return roomCategoryHandler.createRoomCategory(roomCategory, bindingResult);
     }
 
     @PutMapping("/{id}/edit")
     public ResponseEntity<?> updateRoomCategory(@PathVariable Long id,
-                                                @RequestBody @Valid RoomCategory roomCategory,
+                                                @Valid @RequestBody RoomCategory roomCategory,
                                                 BindingResult bindingResult) {
-        Map<String, String> errors = new HashMap<>();
-
-        // Bắt lỗi validation giống như POST
-        if (bindingResult.hasErrors()) {
-            bindingResult.getFieldErrors().forEach(error ->
-                    errors.put(error.getField(), error.getDefaultMessage())
-            );
-        }
-
-        // Check duplicate code (nếu cần check khi update)
-        if (roomCategoryService.existsByCodeAndIdNot(roomCategory.getCode(), id)) {
-            errors.put("code", "Room category code already exists");
-        }
-
-        if (!errors.isEmpty()) {
-            return ResponseEntity.badRequest().body(new ErrorResponse("Validation failed", errors));
-        }
-
-        try {
-            roomCategory.setId(id);
-            RoomCategory updatedRoomCategory = roomCategoryService.update(roomCategory);
-            return ResponseEntity.ok(updatedRoomCategory);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("An error occurred while updating the room category"));
-        }
+        return roomCategoryHandler.updateRoomCategory(id, roomCategory, bindingResult);
     }
 
 
