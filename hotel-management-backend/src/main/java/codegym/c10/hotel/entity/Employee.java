@@ -21,7 +21,6 @@ public class Employee extends BaseEntity {
     @Column(name = "employee_id")
     private Long id;
 
-    @NotNull(message = "User must be associated with employee")
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
