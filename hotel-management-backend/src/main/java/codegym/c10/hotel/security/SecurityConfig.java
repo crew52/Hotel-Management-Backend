@@ -21,6 +21,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.config.Customizer;
 
 @EnableWebSecurity
 @Configuration
@@ -30,6 +35,8 @@ public class SecurityConfig {
     @Lazy
     private IUserService userService;
 
+    @Autowired
+    private CorsConfigurationSource corsConfigurationSource;
 
     @Autowired
     @Lazy
@@ -57,8 +64,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable) // Tắt CSRF vì dùng JWT
-                .cors(cors -> cors.configure(http)) // Kích hoạt CORS (cần cấu hình thêm nếu CorsConfig chưa đủ)
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(corsCustomizer -> corsCustomizer.configurationSource(this.corsConfigurationSource))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Không tạo session phía server
                 .authenticationProvider(authenticationProvider()) // Cấu hình AuthenticationProvider
                 .addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class) // Thêm filter JWT trước filter mặc định
