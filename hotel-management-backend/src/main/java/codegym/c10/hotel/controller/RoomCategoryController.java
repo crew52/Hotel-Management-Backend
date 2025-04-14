@@ -1,6 +1,7 @@
 package codegym.c10.hotel.controller;
 
 import codegym.c10.hotel.entity.RoomCategory;
+import codegym.c10.hotel.exception.ErrorResponse;
 import codegym.c10.hotel.service.IRoomCategoryService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -77,6 +78,36 @@ public class RoomCategoryController {
 
         RoomCategory savedCategory = roomCategoryService.save(roomCategory);
         return new ResponseEntity<>(savedCategory, HttpStatus.CREATED);
+    }
+
+    @PutMapping("/{id}/edit")
+    public ResponseEntity<?> updateRoomCategory(@PathVariable Long id,
+                                                @RequestBody @Valid RoomCategory roomCategory,
+                                                BindingResult bindingResult) {
+        // Kiểm tra lỗi validation
+        if (bindingResult.hasErrors()) {
+            // Lưu trữ thông tin lỗi
+            Map<String, String> errorMessages = new HashMap<>();
+            bindingResult.getAllErrors().forEach(error -> {
+                // Thêm thông tin lỗi vào Map với tên trường và thông điệp lỗi
+                errorMessages.put(error.getObjectName(), error.getDefaultMessage());
+            });
+            return ResponseEntity.badRequest().body(new ErrorResponse("Validation failed", errorMessages));
+        }
+
+        try {
+            // Gán id cho đối tượng để cập nhật
+            roomCategory.setId(id);
+
+            // Gọi phương thức update từ service
+            RoomCategory updatedRoomCategory = roomCategoryService.update(roomCategory);
+
+            return ResponseEntity.ok(updatedRoomCategory);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while updating the room category");
+        }
     }
 
 }

@@ -12,4 +12,5 @@ public interface IRoomCategoryRepository extends JpaRepository<RoomCategory, Lon
     List<RoomCategory> findByDeletedFalse();
     Optional<RoomCategory> findByIdAndDeletedFalse(Long id);
     boolean existsByCode(String code);
+    boolean existsByCodeAndIdNot(String code, Long id);
 }

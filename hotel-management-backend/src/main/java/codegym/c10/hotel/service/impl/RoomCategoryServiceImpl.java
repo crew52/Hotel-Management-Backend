@@ -49,4 +49,43 @@ public class RoomCategoryServiceImpl implements IRoomCategoryService {
     public boolean existsByCode(String code) {
         return roomCategoryRepository.existsByCode(code);
     }
+
+    @Override
+    public boolean existsByCodeAndIdNot(String code, Long id) {
+        return roomCategoryRepository.existsByCodeAndIdNot(code, id);
+    }
+
+    @Override
+    public RoomCategory update(RoomCategory roomCategory) {
+        // Kiểm tra mã 'code' có trùng với mã của các phòng khác không
+        if (existsByCodeAndIdNot(roomCategory.getCode(), roomCategory.getId())) {
+            throw new IllegalArgumentException("Room category code already exists.");
+        }
+
+        // Tìm kiếm đối tượng RoomCategory cần cập nhật
+        RoomCategory existingRoomCategory = roomCategoryRepository.findById(roomCategory.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Room category not found"));
+
+        // Cập nhật các trường thông tin
+        existingRoomCategory.setCode(roomCategory.getCode());
+        existingRoomCategory.setName(roomCategory.getName());
+        existingRoomCategory.setDescription(roomCategory.getDescription());
+        existingRoomCategory.setHourlyPrice(roomCategory.getHourlyPrice());
+        existingRoomCategory.setDailyPrice(roomCategory.getDailyPrice());
+        existingRoomCategory.setOvernightPrice(roomCategory.getOvernightPrice());
+        existingRoomCategory.setEarlyCheckinFee(roomCategory.getEarlyCheckinFee());
+        existingRoomCategory.setLateCheckoutFee(roomCategory.getLateCheckoutFee());
+        existingRoomCategory.setExtraFeeType(roomCategory.getExtraFeeType());
+        existingRoomCategory.setDefaultExtraFee(roomCategory.getDefaultExtraFee());
+        existingRoomCategory.setApplyToAllCategories(roomCategory.getApplyToAllCategories());
+        existingRoomCategory.setStandardAdultCapacity(roomCategory.getStandardAdultCapacity());
+        existingRoomCategory.setStandardChildCapacity(roomCategory.getStandardChildCapacity());
+        existingRoomCategory.setMaxAdultCapacity(roomCategory.getMaxAdultCapacity());
+        existingRoomCategory.setMaxChildCapacity(roomCategory.getMaxChildCapacity());
+        existingRoomCategory.setStatus(roomCategory.getStatus());
+        existingRoomCategory.setImgUrl(roomCategory.getImgUrl());
+
+        // Lưu lại đối tượng đã cập nhật
+        return roomCategoryRepository.save(existingRoomCategory);
+    }
 }
