@@ -19,6 +19,7 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Date;
+import java.util.Map;
 
 @Component
 public class JwtUtil {
@@ -44,19 +45,17 @@ public class JwtUtil {
         }
     }
 
-    public String generateToken(Authentication authentication) {
-        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-
-        logger.info("Generating JWT token for user: {}", userDetails.getUsername());
+    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) { // Đổi tên ở đây
+        logger.info("Generating JWT token with extra claims for user: {}", userDetails.getUsername());
 
         return Jwts.builder()
-                .setSubject(userDetails.getUsername())
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
-                .compact();
+                .setClaims(extraClaims) // Thêm các claims bổ sung vào đây
+                .setSubject(userDetails.getUsername()) // Đặt subject là username
+                .setIssuedAt(new Date()) // Thời gian phát hành
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs)) // Thời gian hết hạn
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512) // Ký token
+                .compact(); // Xây dựng token
     }
-
     public String extractUsername(String token) {
         try {
             return Jwts.parserBuilder()

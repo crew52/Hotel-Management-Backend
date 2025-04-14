@@ -27,10 +27,6 @@ public class SecurityConfig {
     @Autowired
     private IUserService userService;
 
-//    @Bean
-//    public JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter(){
-//        return new JwtAuthenticationTokenFilter();
-//    }
 
     @Autowired
     private JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter;
