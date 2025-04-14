@@ -2,7 +2,7 @@ package codegym.c10.hotel.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-
+import jakarta.validation.constraints.*;
 import java.util.Set;
 
 @EqualsAndHashCode(callSuper = true)
@@ -18,12 +18,15 @@ public class Role extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Role name must not be blank")
+    @Size(max = 100, message = "Role name must be less than or equal to 100 characters")
     @Column(nullable = false, unique = true, length = 100)
     private String name;
 
     @ManyToMany(mappedBy = "roles")
     private Set<User> users;
 
+    @NotEmpty(message = "At least one permission must be assigned to the role")
     @ManyToMany
     @JoinTable(
             name = "role_permissions",
@@ -32,3 +35,4 @@ public class Role extends BaseEntity {
     )
     private Set<Permission> permissions;
 }
+
