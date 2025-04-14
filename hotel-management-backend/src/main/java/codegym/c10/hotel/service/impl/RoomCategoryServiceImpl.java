@@ -1,5 +1,6 @@
 package codegym.c10.hotel.service.impl;
 
+import codegym.c10.hotel.eNum.ExtraFeeType;
 import codegym.c10.hotel.entity.RoomCategory;
 import codegym.c10.hotel.repository.IRoomCategoryRepository;
 import codegym.c10.hotel.service.IRoomCategoryService;
@@ -7,6 +8,7 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 @Service
@@ -20,10 +22,10 @@ public class RoomCategoryServiceImpl implements IRoomCategoryService {
     }
 
     @Override
-    public RoomCategory save(RoomCategory T) {
-        return null;
-        //TODO
+    public RoomCategory save(RoomCategory roomCategory) {
+        return roomCategoryRepository.save(roomCategory);
     }
+
 
     @Override
     public Optional<RoomCategory> findById(Long id) {
@@ -41,5 +43,10 @@ public class RoomCategoryServiceImpl implements IRoomCategoryService {
         } else {
             throw new EntityNotFoundException("Room category not found with id: " + id);  // Nếu không tìm thấy bản ghi
         }
+    }
+
+    @Override
+    public boolean existsByCode(String code) {
+        return roomCategoryRepository.existsByCode(code);
     }
 }

@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface IRoomCategoryRepository extends JpaRepository<RoomCategory, Long> {
     List<RoomCategory> findByDeletedFalse();
     Optional<RoomCategory> findByIdAndDeletedFalse(Long id);
+    boolean existsByCode(String code);
 }
