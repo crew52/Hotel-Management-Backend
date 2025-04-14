@@ -36,4 +36,11 @@ public class RoomCategoryController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);  // Trả về lỗi "Not Found" nếu không tìm thấy bản ghi
         }
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<RoomCategory> getRoomCategoryById(@PathVariable Long id) {
+        return roomCategoryService.findById(id)
+                .map(roomCategory -> new ResponseEntity<>(roomCategory, HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
 }

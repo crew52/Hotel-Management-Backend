@@ -27,7 +27,7 @@ public class RoomCategoryServiceImpl implements IRoomCategoryService {
 
     @Override
     public Optional<RoomCategory> findById(Long id) {
-        return roomCategoryRepository.findById(id);
+        return roomCategoryRepository.findByIdAndDeletedFalse(id);
     }
 
     @Override
