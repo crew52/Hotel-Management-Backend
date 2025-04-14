@@ -2,9 +2,9 @@ CREATE DATABASE hotel_management_db;
 USE hotel_management_db;
 
 CREATE TABLE Room_Category (
-    room_category_id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    room_category_code VARCHAR(20) NOT NULL UNIQUE,
-    room_category_name VARCHAR(100) NOT NULL,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    code VARCHAR(20) NOT NULL UNIQUE,
+    name VARCHAR(100) NOT NULL,
     description TEXT,
     hourly_price DECIMAL(10, 2),
     daily_price DECIMAL(10, 2),
@@ -26,7 +26,7 @@ CREATE TABLE Room_Category (
 );
 
 CREATE TABLE Rooms (
-    room_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     room_category_id BIGINT NOT NULL,
     floor INT,
     start_date DATE,
@@ -45,7 +45,7 @@ CREATE TABLE Rooms (
     -- Foreign Key
     CONSTRAINT fk_room_type
         FOREIGN KEY (room_category_id)
-        REFERENCES Room_Category(room_category_id)
+        REFERENCES Room_Category(id)
         ON DELETE RESTRICT
         ON UPDATE CASCADE
 );
@@ -81,7 +81,7 @@ CREATE TABLE activity_logs (
 );
 
 CREATE TABLE Employees (
-    employee_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     full_name VARCHAR(100) NOT NULL,
     gender ENUM('FEMALE', 'MALE''OTHER') NOT NULL,
@@ -93,6 +93,7 @@ CREATE TABLE Employees (
     department VARCHAR(100),
     start_date DATE NOT NULL,
     note TEXT,
+    img_url VARCHAR(255),
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     deleted BOOLEAN DEFAULT FALSE,
