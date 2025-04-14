@@ -49,13 +49,6 @@ public class RoomCategoryController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-//    @PostMapping
-//    public ResponseEntity<RoomCategory> createRoomCategory(@RequestBody @Valid RoomCategory roomCategory) {
-//        RoomCategory savedCategory = roomCategoryService.save(roomCategory);
-//        return new ResponseEntity<>(savedCategory, HttpStatus.CREATED);
-//    }
-
-    // CREATE
     @PostMapping
     public ResponseEntity<?> createRoomCategory(@Valid @RequestBody RoomCategory roomCategory, BindingResult bindingResult) {
         Map<String, String> errors = new HashMap<>();
@@ -73,7 +66,7 @@ public class RoomCategoryController {
         }
 
         if (!errors.isEmpty()) {
-            return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorResponse("Validation failed", errors), HttpStatus.BAD_REQUEST);
         }
 
         RoomCategory savedCategory = roomCategoryService.save(roomCategory);
@@ -84,30 +77,35 @@ public class RoomCategoryController {
     public ResponseEntity<?> updateRoomCategory(@PathVariable Long id,
                                                 @RequestBody @Valid RoomCategory roomCategory,
                                                 BindingResult bindingResult) {
-        // Kiểm tra lỗi validation
+        Map<String, String> errors = new HashMap<>();
+
+        // Bắt lỗi validation giống như POST
         if (bindingResult.hasErrors()) {
-            // Lưu trữ thông tin lỗi
-            Map<String, String> errorMessages = new HashMap<>();
-            bindingResult.getAllErrors().forEach(error -> {
-                // Thêm thông tin lỗi vào Map với tên trường và thông điệp lỗi
-                errorMessages.put(error.getObjectName(), error.getDefaultMessage());
-            });
-            return ResponseEntity.badRequest().body(new ErrorResponse("Validation failed", errorMessages));
+            bindingResult.getFieldErrors().forEach(error ->
+                    errors.put(error.getField(), error.getDefaultMessage())
+            );
+        }
+
+        // Check duplicate code (nếu cần check khi update)
+        if (roomCategoryService.existsByCodeAndIdNot(roomCategory.getCode(), id)) {
+            errors.put("code", "Room category code already exists");
+        }
+
+        if (!errors.isEmpty()) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("Validation failed", errors));
         }
 
         try {
-            // Gán id cho đối tượng để cập nhật
             roomCategory.setId(id);
-
-            // Gọi phương thức update từ service
             RoomCategory updatedRoomCategory = roomCategoryService.update(roomCategory);
-
             return ResponseEntity.ok(updatedRoomCategory);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while updating the room category");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("An error occurred while updating the room category"));
         }
     }
+
 
 }
