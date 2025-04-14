@@ -12,6 +12,7 @@ import codegym.c10.hotel.repository.RoleRepository;
 import codegym.c10.hotel.repository.UserRepository;
 import codegym.c10.hotel.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -76,10 +77,10 @@ public class UserService implements IUserService {
         String loginInput = loginRequest.getUsernameOrEmail();
         User user = userRepository.findByUsername(loginInput);
         if (user == null) {
-            return new ApiResponse(false, "Tài khoản hoặc mật khẩu không chính xác");
+            return new ApiResponse(false, "Tài khoản hoặc mật khẩu không chính xác");
         }
         if (!this.passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
-            return new ApiResponse(false, "Tài khoản hoặc mật khẩu không chính xác");
+            return new ApiResponse(false, "Tài khoản hoặc mật khẩu không chính xác");
         }
 
         // Sử dụng UserPrinciple.build(user) để lấy thông tin chính xác của user bao gồm authorities
@@ -87,20 +88,40 @@ public class UserService implements IUserService {
 
         Map<String, Object> extraClaims = new HashMap<>();
 
-        // --- THAY ĐỔI Ở ĐÂY ---
-        // Lấy danh sách tên vai trò (String) thay vì đối tượng Role
-        Set<String> roleNames = user.getRoles().stream()
-                .map(Role::getName) // Lấy tên từ đối tượng Role
-                .collect(Collectors.toSet());
-        extraClaims.put("roles", roleNames); // Đưa Set<String> vào claims
+
+        List<String> roleNames = user.getRoles().stream()
+                .map(Role::getName) // Lấy tên vai trò, ví dụ: "ROLE_ADMIN", "ROLE_USER"
+                .collect(Collectors.toList()); // Thu thập thành List<String>
+        extraClaims.put("roles", roleNames); // Đưa danh sách tên vai trò vào claims
+
+
+       extraClaims.put("userId", user.getId());
 
 
         String jwtToken = this.jwtUtil.generateToken(extraClaims, userDetails);
 
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("token", jwtToken);
+        // Có thể thêm thông tin user vào response nếu cần thiết cho frontend
+         responseData.put("userInfo", Map.of(
+                "id", user.getId(),
+                "username", user.getUsername(),
+                "email", user.getEmail(),
+                "roles", roleNames // Gửi lại roles trong response nếu cần
+         ));
 
         return new ApiResponse(true, "Login successful", responseData);
+    }
+
+    @Override
+    public ApiResponse logoutUser() {
+        logger.info("Xử lý đăng xuất người dùng");
+        
+        // Xóa thông tin xác thực hiện tại
+        SecurityContextHolder.clearContext();
+        
+        // Trả về thông báo đăng xuất thành công
+        return new ApiResponse(true, "Đăng xuất thành công");
     }
 
     @Override

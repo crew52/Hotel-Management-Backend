@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 public interface IUserService extends IGenericService<User>, UserDetailsService {
     ApiResponse registerUser(SignupRequest signupRequest);
     ApiResponse loginUser(LoginRequest loginRequest);
+    ApiResponse logoutUser();
     User getUser(String username);
     @Override
     UserDetails loadUserByUsername(String username) throws UsernameNotFoundException;

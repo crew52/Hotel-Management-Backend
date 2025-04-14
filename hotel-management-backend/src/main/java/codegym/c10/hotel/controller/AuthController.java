@@ -7,6 +7,9 @@ import codegym.c10.hotel.service.user.IUserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin(origins = "*")
@@ -49,5 +52,19 @@ public class AuthController {
              // Thường trả về BAD_REQUEST nếu đăng ký không thành công do dữ liệu không hợp lệ
             return ResponseEntity.badRequest().body(response);
         }
+    }
+    
+    /**
+     * Endpoint xử lý yêu cầu đăng xuất.
+     * Đăng xuất bằng cách xóa thông tin xác thực trong SecurityContext.
+     * Client cần xóa token ở phía client (localStorage, cookie, v.v.)
+     * @return ResponseEntity chứa ApiResponse thông báo đăng xuất thành công.
+     */
+    @PostMapping("/logout")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse> logout() {
+        // Sử dụng service để xử lý logic đăng xuất
+        ApiResponse response = userService.logoutUser();
+        return ResponseEntity.ok(response);
     }
 }
