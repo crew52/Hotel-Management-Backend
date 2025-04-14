@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -52,20 +53,28 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        return http.csrf(AbstractHttpConfigurer::disable)
-                .addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class)
+        http
+                .csrf(AbstractHttpConfigurer::disable) // Tắt CSRF vì dùng JWT
+                .cors(cors -> cors.configure(http)) // Kích hoạt CORS (cần cấu hình thêm nếu CorsConfig chưa đủ)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Không tạo session phía server
+                .authenticationProvider(authenticationProvider()) // Cấu hình AuthenticationProvider
+                .addFilterBefore(jwtAuthenticationTokenFilter, UsernamePasswordAuthenticationFilter.class) // Thêm filter JWT trước filter mặc định
                 .authorizeHttpRequests(auth -> auth
-                        // Cho phép tất cả các request OPTIONS (dành cho CORS)
+                        // Cho phép tất cả các request OPTIONS (quan trọng cho CORS preflight)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Cho phép truy cập các API đăng nhập, đăng ký công khai
                         .requestMatchers("/api/auth/**").permitAll()
-                        // Yêu cầu với GET request đối với /api/products/** thì người dùng phải có role USER hoặc ADMIN
-                        .requestMatchers(HttpMethod.GET, "/api/products/**").hasAnyRole("USER", "ADMIN")
-                        // Các request khác (POST, PUT, DELETE) đối với /api/products/** chỉ cho phép ADMIN
-                        .requestMatchers("/api/products/**").hasRole("ADMIN")
-                        // Các request khác cần xác thực
+
+                        // --- QUAN TRỌNG: Định nghĩa các quy tắc phân quyền cho các API khác tại đây ---
+                        // Ví dụ:
+                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // Chỉ ADMIN mới vào được /api/admin/**
+                        // .requestMatchers("/api/rooms/**").hasAnyRole("ADMIN", "RECEPTIONIST") // ADMIN hoặc RECEPTIONIST
+                        // .requestMatchers(HttpMethod.GET, "/api/public/info").permitAll() // API công khai khác
+
+                        // Các request còn lại cần phải xác thực
                         .anyRequest().authenticated()
-                )
-                .build();
+                );
+
+        return http.build();
     }
 }
