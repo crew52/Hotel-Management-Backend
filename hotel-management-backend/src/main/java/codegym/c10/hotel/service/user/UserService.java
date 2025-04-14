@@ -18,18 +18,26 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UserService implements IUserService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
-    @Autowired
-    private RoleRepository roleRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final RoleRepository roleRepository; // Sử dụng final và constructor injection
+    private final UserRepository userRepository; // Sử dụng final và constructor injection
+    private final JwtUtil jwtUtil;             // Sử dụng final và constructor injection
+    private final PasswordEncoder passwordEncoder; // Sử dụng final và constructor injection
+
+    @Autowired // Có thể cần hoặc không tùy phiên bản Spring, nhưng nên có để rõ ràng
+    public UserService(RoleRepository roleRepository,
+                       UserRepository userRepository,
+                       JwtUtil jwtUtil,
+                       PasswordEncoder passwordEncoder) {
+        this.roleRepository = roleRepository;
+        this.userRepository = userRepository;
+        this.jwtUtil = jwtUtil;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public ApiResponse registerUser(SignupRequest signupRequest) {
@@ -39,10 +47,15 @@ public class UserService implements IUserService {
 
         User user = new User();
         user.setUsername(signupRequest.getUsername());
-        user.setPasswordHash(passwordEncoder.encode(signupRequest.getPassword()));
+        user.setPasswordHash(this.passwordEncoder.encode(signupRequest.getPassword()));
+
+        // ---> THÊM DÒNG NÀY VÀO <---
+        user.setEmail(signupRequest.getEmail());
+        // -----------------------------
 
         // Chuyển đổi roles từ request thành các đối tượng Role đã tồn tại trong DB
         Set<Role> persistedRoles = new HashSet<>();
+        // ... (phần xử lý roles giữ nguyên)
         for (Role roleRequest : signupRequest.getRoles()) {
             Role persistedRole = roleRepository.findByName(roleRequest.getName());
             if (persistedRole != null) {
@@ -54,7 +67,7 @@ public class UserService implements IUserService {
         }
         user.setRoles(persistedRoles);
 
-        userRepository.save(user);
+        userRepository.save(user); // Bây giờ user đã có email trước khi lưu
         return new ApiResponse(true, "User registered successfully");
     }
 
@@ -65,17 +78,24 @@ public class UserService implements IUserService {
         if (user == null) {
             return new ApiResponse(false, "Tài khoản hoặc mật khẩu không chính xác");
         }
-        if (!passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
+        if (!this.passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
             return new ApiResponse(false, "Tài khoản hoặc mật khẩu không chính xác");
         }
 
         // Sử dụng UserPrinciple.build(user) để lấy thông tin chính xác của user bao gồm authorities
         UserDetails userDetails = UserPrinciple.build(user);
 
-        Map<String, Object> extraClams = new HashMap<>();
-        extraClams.put("roles", user.getRoles());
+        Map<String, Object> extraClaims = new HashMap<>();
 
-        String jwtToken = jwtUtil.generateToken(extraClams, userDetails);
+        // --- THAY ĐỔI Ở ĐÂY ---
+        // Lấy danh sách tên vai trò (String) thay vì đối tượng Role
+        Set<String> roleNames = user.getRoles().stream()
+                .map(Role::getName) // Lấy tên từ đối tượng Role
+                .collect(Collectors.toSet());
+        extraClaims.put("roles", roleNames); // Đưa Set<String> vào claims
+
+
+        String jwtToken = this.jwtUtil.generateToken(extraClaims, userDetails);
 
         Map<String, Object> responseData = new HashMap<>();
         responseData.put("token", jwtToken);

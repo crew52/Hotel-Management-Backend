@@ -5,6 +5,7 @@ import codegym.c10.hotel.service.user.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -26,10 +27,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableMethodSecurity()
 public class SecurityConfig {
     @Autowired
+    @Lazy
     private IUserService userService;
 
 
     @Autowired
+    @Lazy
     private JwtAuthenticationTokenFilter jwtAuthenticationTokenFilter;
 
     @Bean(BeanIds.AUTHENTICATION_MANAGER)
