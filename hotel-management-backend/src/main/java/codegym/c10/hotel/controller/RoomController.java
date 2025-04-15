@@ -5,6 +5,7 @@ import codegym.c10.hotel.entity.Room;
 import codegym.c10.hotel.entity.RoomCategory;
 import codegym.c10.hotel.service.IRoomService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -60,6 +61,12 @@ public class RoomController {
         } catch (EntityNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
+    }
+
+    @PostMapping
+    public ResponseEntity<?> createRoom(@Valid @RequestBody Room room) {
+        Room savedRoom = roomService.save(room);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedRoom);
     }
 
 }

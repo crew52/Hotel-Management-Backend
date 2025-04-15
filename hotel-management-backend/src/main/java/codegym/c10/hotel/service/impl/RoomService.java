@@ -19,6 +19,9 @@ public class RoomService implements IRoomService {
     @Autowired
     private IRoomRepository roomRepository;
 
+    @Autowired
+    private IRoomCategoryRepository roomCategoryRepository;
+
     @Override
     public Room update(Room room) {
         return null;
@@ -46,9 +49,15 @@ public class RoomService implements IRoomService {
     }
 
     @Override
-    public Room save(Room T) {
-        return null;
-        //TODO
+    public Room save(Room room) {
+        Long categoryId = room.getRoomCategory().getId();
+
+        RoomCategory category = roomCategoryRepository.findById(categoryId)
+                .orElseThrow(() -> new EntityNotFoundException("RoomCategory not found with id: " + categoryId));
+
+        room.setRoomCategory(category);
+
+        return roomRepository.save(room);
     }
 
     @Override
