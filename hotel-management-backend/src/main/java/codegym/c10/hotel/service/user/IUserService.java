@@ -19,4 +19,6 @@ public interface IUserService extends IGenerateService<User>, UserDetailsService
     UserDetails loadUserByUsername(String username) throws UsernameNotFoundException;
 
     void delete(User user);
+
+    ApiResponse changePassword(String username, String oldPassword, String newPassword);
 }
