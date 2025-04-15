@@ -1,5 +1,6 @@
 package codegym.c10.hotel.service.impl;
 
+import codegym.c10.hotel.eNum.RoomStatus;
 import codegym.c10.hotel.entity.Room;
 import codegym.c10.hotel.repository.IRoomCategoryRepository;
 import codegym.c10.hotel.repository.IRoomRepository;
@@ -24,6 +25,16 @@ public class RoomService implements IRoomService {
     @Override
     public Page<Room> findAllByDeletedFalse(Pageable pageable) {
         return roomRepository.findAllByDeletedFalse(pageable);
+    }
+
+    @Override
+    public Page<Room> advancedSearch(String keyword, RoomStatus status, Integer floor, Pageable pageable) {
+        return roomRepository.advancedSearch(
+                keyword != null ? keyword.toLowerCase() : null,
+                status,
+                floor,
+                pageable
+        );
     }
 
     @Override

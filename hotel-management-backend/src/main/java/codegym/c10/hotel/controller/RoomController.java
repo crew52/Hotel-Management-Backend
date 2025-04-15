@@ -1,5 +1,6 @@
 package codegym.c10.hotel.controller;
 
+import codegym.c10.hotel.eNum.RoomStatus;
 import codegym.c10.hotel.entity.Room;
 import codegym.c10.hotel.entity.RoomCategory;
 import codegym.c10.hotel.service.IRoomService;
@@ -35,5 +36,18 @@ public class RoomController {
         return roomService.findById(id)
                 .map(room -> new ResponseEntity<>(room, HttpStatus.OK))
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<Page<Room>> searchRooms(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) RoomStatus status,
+            @RequestParam(required = false) Integer floor,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Page<Room> rooms = roomService.advancedSearch(keyword, status, floor, pageable);
+        return ResponseEntity.ok(rooms);
     }
 }
