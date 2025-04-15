@@ -5,7 +5,7 @@ import lombok.*;
 import jakarta.validation.constraints.*;
 import java.util.Set;
 
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = true, exclude = {"roles"}) // Loại trừ roles
 @Entity
 @Table(name = "permissions")
 @Data
