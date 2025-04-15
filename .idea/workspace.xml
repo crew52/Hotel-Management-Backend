@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="4573c98e-fe27-4bec-b20b-762c978e6ce2" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/controller/RoomCategoryController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/exception/ErrorResponse.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/exception/RoomCategoryHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/repository/IRoomCategoryRepository.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/service/IGenerateService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/service/IRoomCategoryService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/service/impl/RoomCategoryServiceImpl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hotel-management-backend/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hotel-management-backend/document/Hotel-management-create.sql" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/document/Hotel-management-create.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/ActivityLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/ActivityLog.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/BaseEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/BaseEntity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Employee.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Employee.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Permission.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Permission.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Role.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Role.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Room.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Room.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/RoomCategory.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/RoomCategory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/User.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/exception/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/repository/RoomRepository.java" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$/hotel-management-backend">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="hotel-management-backend" type="f1a62948:ProjectNode" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Interface" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+    <option name="RESET_MODE" value="HARD" />
+  </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;phuhoang06&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/crew52/Hotel-Management-Backend.git&quot;,
+    &quot;accountId&quot;: &quot;3a3b17a7-148e-4b43-87d1-af5e45158c95&quot;
+  }
+}</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-core/10.1.39/f6acead04214d5aaea82c2639392208df33b3abe/tomcat-embed-core-10.1.39.jar!/jakarta/servlet/ServletRequestWrapper.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-core/10.1.39/f6acead04214d5aaea82c2639392208df33b3abe/tomcat-embed-core-10.1.39.jar!/org/apache/catalina/connector/Request.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-core/10.1.39/f6acead04214d5aaea82c2639392208df33b3abe/tomcat-embed-core-10.1.39.jar!/org/apache/catalina/connector/RequestFacade.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.apache.tomcat.embed/tomcat-embed-core/10.1.39/f6acead04214d5aaea82c2639392208df33b3abe/tomcat-embed-core-10.1.39.jar!/org/apache/catalina/core/StandardContext.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework.security/spring-security-web/6.4.4/b33b3eba22ef5242caef0cf3c0575b0cc303519b/spring-security-web-6.4.4.jar!/org/springframework/security/web/FilterChainProxy.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework.security/spring-security-web/6.4.4/b33b3eba22ef5242caef0cf3c0575b0cc303519b/spring-security-web-6.4.4.jar!/org/springframework/security/web/access/ExceptionTranslationFilter.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework.security/spring-security-web/6.4.4/b33b3eba22ef5242caef0cf3c0575b0cc303519b/spring-security-web-6.4.4.jar!/org/springframework/security/web/access/intercept/AuthorizationFilter.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework.security/spring-security-web/6.4.4/b33b3eba22ef5242caef0cf3c0575b0cc303519b/spring-security-web-6.4.4.jar!/org/springframework/security/web/authentication/AnonymousAuthenticationFilter.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework.security/spring-security-web/6.4.4/b33b3eba22ef5242caef0cf3c0575b0cc303519b/spring-security-web-6.4.4.jar!/org/springframework/security/web/authentication/logout/LogoutFilter.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework.security/spring-security-web/6.4.4/b33b3eba22ef5242caef0cf3c0575b0cc303519b/spring-security-web-6.4.4.jar!/org/springframework/security/web/savedrequest/RequestCacheAwareFilter.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework.security/spring-security-web/6.4.4/b33b3eba22ef5242caef0cf3c0575b0cc303519b/spring-security-web-6.4.4.jar!/org/springframework/security/web/servletapi/SecurityContextHolderAwareRequestFilter.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework.security/spring-security-web/6.4.4/b33b3eba22ef5242caef0cf3c0575b0cc303519b/spring-security-web-6.4.4.jar!/org/springframework/security/web/session/SessionManagementFilter.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework/spring-aop/6.2.5/9f436be65bf45ee8643d93e6823d6c81e8f9f91a/spring-aop-6.2.5.jar!/org/springframework/aop/TargetSource.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework/spring-aop/6.2.5/9f436be65bf45ee8643d93e6823d6c81e8f9f91a/spring-aop-6.2.5.jar!/org/springframework/aop/framework/CglibAopProxy.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework/spring-aop/6.2.5/9f436be65bf45ee8643d93e6823d6c81e8f9f91a/spring-aop-6.2.5.jar!/org/springframework/aop/support/AopUtils.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework/spring-web/6.2.5/b42d2c0acbe05bad4c849883aa8816c25b6c1d94/spring-web-6.2.5.jar!/org/springframework/web/filter/CorsFilter.class" root0="SKIP_INSPECTION" />
+    <setting file="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/org.springframework/spring-web/6.2.5/b42d2c0acbe05bad4c849883aa8816c25b6c1d94/spring-web-6.2.5.jar!/org/springframework/web/filter/OncePerRequestFilter.class" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 7
+}</component>
+  <component name="ProjectId" id="2vhOsGQFomGyRfaQRpZEwTD3aHT" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="showScratchesAndConsoles" value="false" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Gradle.Build hotel-management-backend.executor": "Run",
+    "RequestMappingsPanelOrder0": "0",
+    "RequestMappingsPanelOrder1": "1",
+    "RequestMappingsPanelWidth0": "75",
+    "RequestMappingsPanelWidth1": "75",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "Spring Boot.HotelManagementBackendApplication.executor": "Run",
+    "git-widget-placeholder": "Merging dev",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/admin/OneDrive/Desktop/Hotel-Management/hotel-management-backend",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "mysql"
+    ]
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\admin\Desktop\hotel-management-backend\hotel-management-backend\src\main\java\codegym\c10\hotel\security" />
+      <recent name="C:\Users\admin\Desktop\hotel-management-backend\hotel-management-backend\src\main\java\codegym\c10\hotel\validator" />
+    </key>
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="codegym.c10.hotel.service" />
+      <recent name="codegym.c10.hotel.service.user" />
+      <recent name="codegym.c10.hotel.security" />
+      <recent name="codegym.c10.hotel.dto.auth" />
+      <recent name="codegym.c10.hotel.dto" />
+    </key>
+  </component>
+  <component name="RunManager">
+    <configuration name="HotelManagementBackendApplication" type="SpringBootApplicationConfigurationType" factoryName="Spring Boot" nameIsGenerated="true">
+      <option name="FRAME_DEACTIVATION_UPDATE_POLICY" value="UpdateClassesAndResources" />
+      <module name="hotel-management-backend.main" />
+      <option name="SPRING_BOOT_MAIN_CLASS" value="codegym.c10.hotel.HotelManagementBackendApplication" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-a94e463ab2e7-intellij.indexing.shared.core-IU-243.25659.59" />
+        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-IU-243.25659.59" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="StructureViewState">
+    <option name="selectedTab" value="Logical" />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="4573c98e-fe27-4bec-b20b-762c978e6ce2" name="Changes" comment="" />
+      <created>1744594046488</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1744594046488</updated>
+      <workItem from="1744594046588" duration="3758000" />
+      <workItem from="1744597892888" duration="10655000" />
+      <workItem from="1744615563436" duration="6444000" />
+      <workItem from="1744624203165" duration="868000" />
+      <workItem from="1744625497974" duration="404000" />
+      <workItem from="1744681058388" duration="2296000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
