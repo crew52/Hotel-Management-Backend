@@ -38,7 +38,7 @@ public class RoomService implements IRoomService {
 
     @Override
     public Optional<Room> findById(Long id) {
-        return Optional.empty();
+        return roomRepository.findByIdAndDeletedFalse(id);
     }
 
     @Override
