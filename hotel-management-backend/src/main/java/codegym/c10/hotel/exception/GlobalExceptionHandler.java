@@ -3,28 +3,41 @@ package codegym.c10.hotel.exception;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<Map<String, Object>> handleValidationException(ConstraintViolationException ex) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("status", HttpStatus.BAD_REQUEST.value());
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidEnum(HttpMessageNotReadableException ex) {
+        String message = "Invalid value provided";
 
-        // Lấy danh sách lỗi chi tiết
-        List<String> errorMessages = ex.getConstraintViolations()
-                .stream()
-                .map(violation -> violation.getPropertyPath() + ": " + violation.getMessage())
-                .toList();
+        // Check xem có phải lỗi enum không
+        Throwable mostSpecificCause = ex.getMostSpecificCause();
+        if (mostSpecificCause instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException) {
+            com.fasterxml.jackson.databind.exc.InvalidFormatException ife =
+                    (com.fasterxml.jackson.databind.exc.InvalidFormatException) mostSpecificCause;
 
-        response.put("errors", errorMessages);
-        return ResponseEntity.badRequest().body(response);
+            Class<?> targetType = ife.getTargetType();
+            if (targetType.isEnum()) {
+                String enumValues = Arrays.stream(targetType.getEnumConstants())
+                        .map(Object::toString)
+                        .collect(Collectors.joining(", "));
+                message = String.format("Invalid value for enum %s. Allowed values: [%s]",
+                        targetType.getSimpleName(), enumValues);
+            }
+        }
+
+        Map<String, String> error = new HashMap<>();
+        error.put("error", message);
+        return ResponseEntity.badRequest().body(error);
     }
 }
