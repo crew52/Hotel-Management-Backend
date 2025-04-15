@@ -2,9 +2,11 @@ package codegym.c10.hotel.service.impl;
 
 import codegym.c10.hotel.eNum.RoomStatus;
 import codegym.c10.hotel.entity.Room;
+import codegym.c10.hotel.entity.RoomCategory;
 import codegym.c10.hotel.repository.IRoomCategoryRepository;
 import codegym.c10.hotel.repository.IRoomRepository;
 import codegym.c10.hotel.service.IRoomService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -40,11 +42,13 @@ public class RoomService implements IRoomService {
     @Override
     public Iterable<Room> findAll() {
         return null;
+        //TODO
     }
 
     @Override
     public Room save(Room T) {
         return null;
+        //TODO
     }
 
     @Override
@@ -54,6 +58,14 @@ public class RoomService implements IRoomService {
 
     @Override
     public void remove(Long id) {
+        Optional<Room> room = roomRepository.findById(id);
 
+        if (room.isPresent()) {
+            Room room1 = room.get();
+            room1.setDeleted(true);
+            roomRepository.save(room1);
+        } else {
+            throw new EntityNotFoundException("Room not found with id: " + id);
+        }
     }
 }

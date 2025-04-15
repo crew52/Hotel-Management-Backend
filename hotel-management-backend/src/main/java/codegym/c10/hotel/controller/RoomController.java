@@ -4,6 +4,7 @@ import codegym.c10.hotel.eNum.RoomStatus;
 import codegym.c10.hotel.entity.Room;
 import codegym.c10.hotel.entity.RoomCategory;
 import codegym.c10.hotel.service.IRoomService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -50,4 +51,15 @@ public class RoomController {
         Page<Room> rooms = roomService.advancedSearch(keyword, status, floor, pageable);
         return ResponseEntity.ok(rooms);
     }
+
+    @DeleteMapping("/{id}/delete")
+    public ResponseEntity<Void> removeRoom(@PathVariable Long id) {
+        try {
+            roomService.remove(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (EntityNotFoundException e) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
 }
