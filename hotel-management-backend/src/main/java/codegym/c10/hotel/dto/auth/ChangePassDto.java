@@ -7,7 +7,8 @@ import lombok.Data;
 
 @Data
 @OldPasswordMatch
-@ChangePasswordMatch
+@ChangePasswordMatch(passwordMismatchMessage = "Mật khẩu mới và xác nhận mật khẩu không khớp.",
+        newPasswordSameAsOldMessage = "Mật khẩu mới đang trùng với mật khẩu cũ.")
 public class ChangePassDto {
     private String oldPassword;
     private String newPassword;

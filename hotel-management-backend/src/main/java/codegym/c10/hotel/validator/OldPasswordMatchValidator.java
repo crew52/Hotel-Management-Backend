@@ -26,11 +26,10 @@ public class OldPasswordMatchValidator implements ConstraintValidator<OldPasswor
 
         String oldPassword = changePassDto.getOldPassword();
 
-        // 1. Lấy người dùng đã xác thực hiện tại
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
-            return false; // Không có người dùng đã xác thực
+            return false;
         }
 
         Object principal = authentication.getPrincipal();
@@ -39,19 +38,26 @@ public class OldPasswordMatchValidator implements ConstraintValidator<OldPasswor
         if (principal instanceof UserDetails) {
             username = ((UserDetails) principal).getUsername();
         } else {
-            username = principal.toString(); // Hoặc xử lý khác tùy thuộc vào kiểu principal của bạn
+            username = principal.toString();
         }
 
-        // 2. Tải thông tin chi tiết của người dùng từ dịch vụ của bạn
         UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
         if (userDetails == null) {
-            return false; // Không tìm thấy người dùng (không nên xảy ra nếu đã xác thực)
+            return false;
         }
 
         String currentPassword = userDetails.getPassword();
 
-        // 3. So sánh oldPassword đã cung cấp với mật khẩu đã mã hóa hiện tại
-        return passwordEncoder.matches(oldPassword, currentPassword);
+        if (!passwordEncoder.matches(oldPassword, currentPassword)) {
+            // Thêm một constraint violation tùy chỉnh với thông báo lỗi mong muốn
+            context.disableDefaultConstraintViolation();
+            context.buildConstraintViolationWithTemplate("Mật khẩu hiện tại không đúng")
+                    .addPropertyNode("oldPassword") // Chỉ định trường gây ra lỗi
+                    .addConstraintViolation();
+            return false; // Validation thất bại
+        }
+
+        return true; // Validation thành công
     }
 }
