@@ -19,18 +19,17 @@ public class RoomCategory extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "room_category_id")
     private Long id;
 
     @NotBlank(message = "Room category code is required")
     @Size(max = 20, message = "Room category code must not exceed 20 characters")
-    @Column(name = "room_category_code", nullable = false, unique = true, length = 20)
-    private String roomCategoryCode;
+    @Column(name = "code", nullable = false, unique = true, length = 20)
+    private String code;
 
     @NotBlank(message = "Room category name is required")
     @Size(max = 100, message = "Room category name must not exceed 100 characters")
-    @Column(name = "room_category_name", nullable = false, length = 100)
-    private String roomCategoryName;
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
 
     @Column(columnDefinition = "TEXT")
     private String description;

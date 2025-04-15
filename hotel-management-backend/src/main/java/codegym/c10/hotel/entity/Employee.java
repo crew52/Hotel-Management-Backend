@@ -18,7 +18,6 @@ public class Employee extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "employee_id")
     private Long id;
 
     @NotNull(message = "User must be associated with employee")
@@ -69,4 +68,8 @@ public class Employee extends BaseEntity {
     @Size(max = 65535, message = "Note is too long") // Optional: validate TEXT if needed
     @Column(columnDefinition = "TEXT")
     private String note;
+
+    @Size(max = 255, message = "Image URL must not exceed 255 characters")
+    @Column(name = "img_url", length = 255)
+    private String imgUrl;
 }

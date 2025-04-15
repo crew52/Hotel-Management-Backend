@@ -151,8 +151,13 @@ public class UserService implements IUserService {
     }
 
     @Override
-    public User findById(Long id) {
-        return null;
+    public Optional<User> findById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    @Override
+    public void remove(Long id) {
+
     }
 
     @Override
