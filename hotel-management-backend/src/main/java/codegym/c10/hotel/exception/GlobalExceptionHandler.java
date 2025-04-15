@@ -1,9 +1,11 @@
 package codegym.c10.hotel.exception;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -40,4 +42,26 @@ public class GlobalExceptionHandler {
         error.put("error", message);
         return ResponseEntity.badRequest().body(error);
     }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ErrorResponse> handleValidationErrors(MethodArgumentNotValidException ex) {
+        Map<String, String> errors = new HashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error -> {
+            errors.put(error.getField(), error.getDefaultMessage());
+        });
+
+        ErrorResponse response = new ErrorResponse("Validation failed", errors);
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
+        Map<String, String> errors = new HashMap<>();
+        // Nếu bạn biết lỗi liên quan đến trường nào, có thể đặt key tương ứng
+        errors.put("notFound", ex.getMessage());
+
+        ErrorResponse response = new ErrorResponse("Entity not found", errors);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
 }
