@@ -1,6 +1,7 @@
 package codegym.c10.hotel.controller;
 
 import codegym.c10.hotel.dto.ApiResponse;
+import codegym.c10.hotel.dto.auth.ChangePassDto;
 import codegym.c10.hotel.dto.auth.LoginRequest;
 import codegym.c10.hotel.dto.auth.SignupRequest;
 import codegym.c10.hotel.service.user.IUserService;
@@ -66,5 +67,25 @@ public class AuthController {
         // Sử dụng service để xử lý logic đăng xuất
         ApiResponse response = userService.logoutUser();
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/change-password")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<ApiResponse> changePassword(@Valid @RequestBody ChangePassDto changePassDto) {
+        // Lấy username của người dùng đang đăng nhập
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
+        ApiResponse response = userService.changePassword(
+                username,
+                changePassDto.getOldPassword(),
+                changePassDto.getNewPassword()
+        );
+
+        if (response.isSuccess()) {
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.badRequest().body(response);
+        }
     }
 }

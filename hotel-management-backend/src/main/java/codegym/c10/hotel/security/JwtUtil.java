@@ -45,17 +45,18 @@ public class JwtUtil {
         }
     }
 
-    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) { // Đổi tên ở đây
+    public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
         logger.info("Generating JWT token with extra claims for user: {}", userDetails.getUsername());
 
         return Jwts.builder()
-                .setClaims(extraClaims) // Thêm các claims bổ sung vào đây
-                .setSubject(userDetails.getUsername()) // Đặt subject là username
-                .setIssuedAt(new Date()) // Thời gian phát hành
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs)) // Thời gian hết hạn
-                .signWith(getSigningKey(), SignatureAlgorithm.HS512) // Ký token
-                .compact(); // Xây dựng token
+                .setClaims(extraClaims)
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS512)
+                .compact();
     }
+    
     public String extractUsername(String token) {
         try {
             return Jwts.parserBuilder()
@@ -64,6 +65,9 @@ public class JwtUtil {
                     .parseClaimsJws(token)
                     .getBody()
                     .getSubject();
+        } catch (ExpiredJwtException e) {
+            logger.error("JWT token is expired: {}", e.getMessage());
+            throw e;  // Rethrow to be caught by the filter
         } catch (Exception e) {
             logger.error("Could not extract username from token: {}", e.getMessage());
             return null;
@@ -80,6 +84,7 @@ public class JwtUtil {
             logger.error("Invalid JWT token: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
             logger.error("JWT token is expired: {}", e.getMessage());
+            throw e;  // Rethrow to be caught by the filter
         } catch (UnsupportedJwtException e) {
             logger.error("JWT token is unsupported: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
@@ -90,9 +95,18 @@ public class JwtUtil {
         return false;
     }
 
-    private boolean isTokenExpired(String token) {
+    public boolean isTokenExpired(String token) {
         try {
-            return extractExpiration(token).before(new Date());
+            final Date expiration = extractExpiration(token);
+            boolean isExpired = expiration.before(new Date());
+            if (isExpired) {
+                logger.warn("Token is expired. Expiration date: {}, Current date: {}", 
+                           expiration, new Date());
+            }
+            return isExpired;
+        } catch (ExpiredJwtException e) {
+            logger.error("Token is already expired: {}", e.getMessage());
+            throw e;  // Rethrow to be caught by the filter
         } catch (Exception e) {
             logger.error("Error checking token expiration: {}", e.getMessage());
             return true;
@@ -100,11 +114,16 @@ public class JwtUtil {
     }
 
     private Date extractExpiration(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSigningKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody()
-                .getExpiration();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody()
+                    .getExpiration();
+        } catch (ExpiredJwtException e) {
+            logger.error("Cannot extract expiration date - token already expired: {}", e.getMessage());
+            throw e;  // Rethrow to be caught by the filter
+        }
     }
 }

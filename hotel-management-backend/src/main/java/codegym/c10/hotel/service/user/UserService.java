@@ -169,4 +169,20 @@ public class UserService implements IUserService {
     public void delete(User user) {
 
     }
+
+    @Override
+    public ApiResponse changePassword(String username, String oldPassword, String newPassword) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            return new ApiResponse(false, "Người dùng không tồn tại");
+        }
+
+        if (!passwordEncoder.matches(oldPassword, user.getPasswordHash())) {
+            return new ApiResponse(false, "Mật khẩu cũ không chính xác");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+        return new ApiResponse(true, "Đổi mật khẩu thành công");
+    }
 }

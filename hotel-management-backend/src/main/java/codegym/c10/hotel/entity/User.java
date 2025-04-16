@@ -39,7 +39,7 @@ public class User extends BaseEntity {
     private Boolean isLocked = false;
 
     @NotEmpty(message = "User must have at least one role")
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER) 
     @JoinTable(
             name = "user_role",
             joinColumns = @JoinColumn(name = "user_id"),
