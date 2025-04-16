@@ -24,14 +24,28 @@ import org.springframework.web.bind.annotation.*;
 public class EmployeeController {
     
     private final IEmployeeService employeeService;
-    
+
     @GetMapping
     public ResponseEntity<Page<Employee>> getAllEmployees(
+            @RequestParam(required = false) String department,
+            @RequestParam(required = false) String position,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        Page<Employee> employees = employeeService.findAllByDeletedFalse(pageable);
+        Page<Employee> employees;
+
+        if (department != null && position != null) {
+            employees = employeeService.findAllByDepartmentAndPositionAndDeletedFalse(
+                    department, position, pageable);
+        } else if (department != null) {
+            employees = employeeService.findAllByDepartmentAndDeletedFalse(department, pageable);
+        } else if (position != null) {
+            employees = employeeService.findAllByPositionAndDeletedFalse(position, pageable);
+        } else {
+            employees = employeeService.findAllByDeletedFalse(pageable);
+        }
+
         return ResponseEntity.ok(employees);
     }
     

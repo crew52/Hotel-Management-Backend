@@ -101,4 +101,24 @@ public class EmployeeService implements IEmployeeService {
     public boolean existsByIdCardAndIdNot(String idCard, Long id) {
         return employeeRepository.existsByIdCardAndIdNot(idCard, id);
     }
+
+    // Thêm các phương thức mới
+    @Override
+    public Page<Employee> findAllByDepartmentAndPositionAndDeletedFalse(
+            String department, String position, Pageable pageable) {
+        return employeeRepository.findAllByDepartmentAndPositionAndDeletedFalse(
+                department, position, pageable);
+    }
+
+    @Override
+    public Page<Employee> findAllByDepartmentAndDeletedFalse(
+            String department, Pageable pageable) {
+        return employeeRepository.findAllByDepartmentAndDeletedFalse(department, pageable);
+    }
+
+    @Override
+    public Page<Employee> findAllByPositionAndDeletedFalse(
+            String position, Pageable pageable) {
+        return employeeRepository.findAllByPositionAndDeletedFalse(position, pageable);
+    }
 }
