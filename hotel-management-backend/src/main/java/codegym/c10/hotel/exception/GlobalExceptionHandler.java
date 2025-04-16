@@ -3,6 +3,7 @@ package codegym.c10.hotel.exception;
 // Các import hiện có
 import io.jsonwebtoken.ExpiredJwtException;
 // import jakarta.validation.ConstraintViolationException; // Bạn có thể giữ lại nếu dùng @Validated ở Service layer
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -30,7 +31,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> handleInvalidEnum(HttpMessageNotReadableException ex) {
         String message = "Invalid value provided";
-gi
+
         // Check xem có phải lỗi enum không
         Throwable mostSpecificCause = ex.getMostSpecificCause();
         if (mostSpecificCause instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException) {
@@ -108,5 +109,15 @@ gi
 
         // Trả về mã lỗi 400 Bad Request cùng với thông tin lỗi
         return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleEntityNotFoundException(EntityNotFoundException ex) {
+        Map<String, String> errors = new HashMap<>();
+        // Nếu bạn biết lỗi liên quan đến trường nào, có thể đặt key tương ứng
+        errors.put("notFound", ex.getMessage());
+
+        ErrorResponse response = new ErrorResponse("Entity not found", errors);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 }
