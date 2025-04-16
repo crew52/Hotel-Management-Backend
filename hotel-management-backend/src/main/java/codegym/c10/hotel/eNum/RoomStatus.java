@@ -2,6 +2,9 @@ package codegym.c10.hotel.eNum;
 
 public enum RoomStatus {
     AVAILABLE,
-    OCCUPIED,
-    MAINTENANCE
+    UPCOMING,
+    IN_USE,
+    CHECKOUT_SOON,
+    MAINTENANCE,
+    OVERDUE
 }
