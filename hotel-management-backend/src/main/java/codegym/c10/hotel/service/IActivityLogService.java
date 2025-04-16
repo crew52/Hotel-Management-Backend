@@ -6,5 +6,6 @@ import org.springframework.data.domain.Pageable;
 
 public interface IActivityLogService {
     Page<ActivityLogDTO> getAllActivityLogs(Pageable pageable);
+    Page<ActivityLogDTO> getLogsByUserId(Long userId, Pageable pageable);
 }
 

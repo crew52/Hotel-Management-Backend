@@ -20,4 +20,10 @@ public class ActivityLogServiceImpl implements IActivityLogService {
         return activityLogRepository.findByDeletedFalse(pageable)
                 .map(ActivityLogMapper::toDTO);
     }
+
+    @Override
+    public Page<ActivityLogDTO> getLogsByUserId(Long userId, Pageable pageable) {
+        return activityLogRepository.findByUserIdAndDeletedFalse(userId, pageable)
+                .map(ActivityLogMapper::toDTO);
+    }
 }

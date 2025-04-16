@@ -24,7 +24,18 @@ public class ActivityLogController {
             @RequestParam(defaultValue = "3") int size
     ) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        Page<ActivityLogDTO> rooms = activityLogService.getAllActivityLogs(pageable);
-        return ResponseEntity.ok(rooms);
+        Page<ActivityLogDTO> logs = activityLogService.getAllActivityLogs(pageable);
+        return ResponseEntity.ok(logs);
+    }
+
+    @GetMapping("/{userId}/userId")
+    public ResponseEntity<Page<ActivityLogDTO>> getLogsByUserId(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
+        Page<ActivityLogDTO> logs = activityLogService.getLogsByUserId(userId, pageable);
+        return ResponseEntity.ok(logs);
     }
 }

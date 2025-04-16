@@ -16,10 +16,12 @@ public class ActivityLogMapper {
             fullName = (employee != null) ? employee.getFullName() : null;
         }
 
+        assert user != null;
         return ActivityLogDTO.builder()
                 .id(log.getId())
                 .fullName(fullName)
-                .username(user != null ? user.getUsername() : null)
+                .userId(user.getId())
+                .username(user.getUsername())
                 .action(log.getAction())
                 .timestamp(log.getTimestamp())
                 .description(log.getDescription())

@@ -9,5 +9,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface IActivityLogRepository extends JpaRepository<ActivityLog, Long> {
     Page<ActivityLog> findByDeletedFalse(Pageable pageable);
+    Page<ActivityLog> findByUserIdAndDeletedFalse(Long userId, Pageable pageable);
 }
 
