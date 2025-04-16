@@ -1,5 +1,6 @@
 package codegym.c10.hotel.service.employees;
 
+import codegym.c10.hotel.dto.EmployeeDto;
 import codegym.c10.hotel.entity.Employee;
 import codegym.c10.hotel.service.IGenerateService;
 import org.springframework.data.domain.Page;
@@ -25,4 +26,10 @@ public interface IEmployeeService extends IGenerateService<Employee> {
     boolean existsByIdCard(String idCard);
     boolean existsByPhoneAndIdNot(String phone, Long id);
     boolean existsByIdCardAndIdNot(String idCard, Long id);
+
+    // Các phương thức mới cho mapper service
+    Page<EmployeeDto> findEmployeesByFilters(String department, String position, Pageable pageable);
+    EmployeeDto findEmployeeDtoById(Long id);
+    EmployeeDto createEmployee(EmployeeDto employeeDto);
+    EmployeeDto updateEmployee(Long id, EmployeeDto employeeDto);
 }

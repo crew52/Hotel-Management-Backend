@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.*;
 import java.time.LocalDate;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -54,4 +53,7 @@ public class EmployeeDto {
 
     @Size(max = 255, message = "Image URL must not exceed 255 characters")
     private String imgUrl;
+
+    // Thêm trường để lưu thông tin người dùng khi trả về
+    private UserDto user;
 }
