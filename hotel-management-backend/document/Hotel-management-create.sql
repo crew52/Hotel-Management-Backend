@@ -90,7 +90,7 @@ CREATE TABLE Employees (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     full_name VARCHAR(100) NOT NULL,
-    gender ENUM('FEMALE', 'MALE''OTHER') NOT NULL,
+    gender ENUM('FEMALE', 'MALE','OTHER') NOT NULL,
     dob DATE NOT NULL,
     phone VARCHAR(15) UNIQUE,
     id_card VARCHAR(20) UNIQUE,
