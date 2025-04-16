@@ -30,7 +30,13 @@ CREATE TABLE Rooms (
     room_category_id BIGINT NOT NULL,
     floor INT,
     start_date DATE,
-    status ENUM('AVAILABLE', 'MAINTENANCE', 'OCCUPIED') DEFAULT 'AVAILABLE',
+   status ENUM(
+    'AVAILABLE',        -- Đang trống
+    'UPCOMING',         -- Sắp nhận
+    'IN_USE',           -- Đang sử dụng
+    'CHECKOUT_SOON',    -- Sắp trả
+    'OVERDUE'           -- Quá giờ trả
+) DEFAULT 'AVAILABLE',
     note TEXT,
     is_clean BOOLEAN DEFAULT TRUE,
     check_in_duration INT DEFAULT 0,
