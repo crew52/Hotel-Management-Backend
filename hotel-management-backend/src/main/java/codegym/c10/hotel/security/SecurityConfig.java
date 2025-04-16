@@ -80,6 +80,8 @@ public class SecurityConfig {
                          .requestMatchers("/api/admin/**").hasRole("ADMIN") // Chỉ ADMIN mới vào được /api/admin/**
                         // .requestMatchers("/api/rooms/**").hasAnyRole("ADMIN", "RECEPTIONIST") // ADMIN hoặc RECEPTIONIST
                         // .requestMatchers(HttpMethod.GET, "/api/public/info").permitAll() // API công khai khác
+                        .requestMatchers("/api/rooms/**").permitAll()
+                        .requestMatchers("/api/room-categories/**").permitAll()
 
                         // Các request còn lại cần phải xác thực
                         .anyRequest().authenticated()
