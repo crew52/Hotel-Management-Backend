@@ -90,7 +90,7 @@ CREATE TABLE Employees (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT NOT NULL,
     full_name VARCHAR(100) NOT NULL,
-    gender ENUM('FEMALE', 'MALE''OTHER') NOT NULL,
+    gender ENUM('FEMALE', 'MALE','OTHER') NOT NULL,
     dob DATE NOT NULL,
     phone VARCHAR(15) UNIQUE,
     id_card VARCHAR(20) UNIQUE,
@@ -164,3 +164,36 @@ CREATE TABLE role_permissions (
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
+// trigger
+DELIMITER $$
+
+CREATE TRIGGER trg_after_update_room
+AFTER UPDATE ON Rooms
+FOR EACH ROW
+BEGIN
+    -- Kiểm tra xem có thay đổi dữ liệu không
+    IF NOT (
+        OLD.floor <=> NEW.floor AND
+        OLD.start_date <=> NEW.start_date AND
+        OLD.status <=> NEW.status AND
+        OLD.note <=> NEW.note AND
+        OLD.is_clean <=> NEW.is_clean AND
+        OLD.check_in_duration <=> NEW.check_in_duration AND
+        OLD.img_1 <=> NEW.img_1 AND
+        OLD.img_2 <=> NEW.img_2 AND
+        OLD.img_3 <=> NEW.img_3 AND
+        OLD.img_4 <=> NEW.img_4
+    ) THEN
+        INSERT INTO activity_logs (
+            user_id,
+            action,
+            description
+        ) VALUES (
+            @current_user_id,
+            'UPDATE_ROOM',
+            CONCAT('Room ID ', NEW.id, ' has been updated.')
+        );
+    END IF;
+END$$
+
+DELIMITER ;
