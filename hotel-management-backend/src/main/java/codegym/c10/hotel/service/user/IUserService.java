@@ -21,4 +21,11 @@ public interface IUserService extends IGenerateService<User>, UserDetailsService
     void delete(User user);
 
     ApiResponse changePassword(String username, String oldPassword, String newPassword);
+    
+    /**
+     * Cập nhật thông tin người dùng
+     * @param user Thông tin người dùng sau khi cập nhật
+     * @return Đối tượng người dùng đã cập nhật
+     */
+    User update(User user);
 }

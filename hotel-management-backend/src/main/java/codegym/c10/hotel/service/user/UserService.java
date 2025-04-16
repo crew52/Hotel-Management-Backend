@@ -11,12 +11,14 @@ import codegym.c10.hotel.entity.User;
 import codegym.c10.hotel.repository.RoleRepository;
 import codegym.c10.hotel.repository.UserRepository;
 import codegym.c10.hotel.security.JwtUtil;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -162,12 +164,32 @@ public class UserService implements IUserService {
 
     @Override
     public User save(User user) {
-        return null;
+        // Implementation for save
+        return userRepository.save(user);
     }
 
     @Override
     public void delete(User user) {
+        // Triển khai xoá user
+        user.setDeleted(true);
+        userRepository.save(user);
+    }
 
+    @Override
+    @Transactional
+    public User update(User user) {
+        // Kiểm tra user tồn tại
+        User existingUser = userRepository.findById(user.getId())
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + user.getId()));
+        
+        // Cập nhật các trường cần thiết
+        existingUser.setIsLocked(user.getIsLocked());
+        
+        // Giữ nguyên các trường không cần thay đổi
+        // Chỉ cập nhật những gì cần thiết
+        
+        // Lưu thông tin cập nhật
+        return userRepository.save(existingUser);
     }
 
     @Override

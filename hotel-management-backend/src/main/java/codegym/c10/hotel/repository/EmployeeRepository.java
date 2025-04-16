@@ -19,6 +19,13 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     boolean existsByIdCard(String idCard);
     boolean existsByPhoneAndIdNot(String phone, Long id);
     boolean existsByIdCardAndIdNot(String idCard, Long id);
+    
+    // Các phương thức tìm kiếm không phân biệt deleted
+    Page<Employee> findAllByDepartmentAndPosition(String department, String position, Pageable pageable);
+    Page<Employee> findAllByDepartment(String department, Pageable pageable);
+    Page<Employee> findAllByPosition(String position, Pageable pageable);
+    
+    // Các phương thức tìm kiếm chỉ với deleted=false
     Page<Employee> findAllByDepartmentAndPositionAndDeletedFalse(
             String department, String position, Pageable pageable);
 
