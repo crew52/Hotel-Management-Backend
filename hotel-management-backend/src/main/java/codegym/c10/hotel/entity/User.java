@@ -46,4 +46,7 @@ public class User extends BaseEntity {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<@NotNull Role> roles;
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private Employee employee;
 }
