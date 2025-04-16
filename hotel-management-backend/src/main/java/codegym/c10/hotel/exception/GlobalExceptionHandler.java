@@ -30,7 +30,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> handleInvalidEnum(HttpMessageNotReadableException ex) {
         String message = "Invalid value provided";
-
+gi
         // Check xem có phải lỗi enum không
         Throwable mostSpecificCause = ex.getMostSpecificCause();
         if (mostSpecificCause instanceof com.fasterxml.jackson.databind.exc.InvalidFormatException) {
