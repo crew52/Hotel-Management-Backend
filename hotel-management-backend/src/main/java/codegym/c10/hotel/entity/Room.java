@@ -4,6 +4,7 @@ import codegym.c10.hotel.eNum.RoomStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import jakarta.validation.constraints.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 import java.time.LocalDate;
 
@@ -29,7 +30,7 @@ public class Room extends BaseEntity {
     @Column
     private Integer floor;
 
-    @PastOrPresent(message = "Start date cannot be in the future")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     @Column(name = "start_date")
     private LocalDate startDate;
 

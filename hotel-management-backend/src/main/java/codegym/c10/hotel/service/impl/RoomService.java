@@ -24,7 +24,31 @@ public class RoomService implements IRoomService {
 
     @Override
     public Room update(Room room) {
-        return null;
+        // Kiểm tra xem phòng có tồn tại không
+        Room existingRoom = roomRepository.findById(room.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Room not found with id: " + room.getId()));
+
+        // Kiểm tra và cập nhật room category nếu có thay đổi
+        if (room.getRoomCategory() != null && room.getRoomCategory().getId() != null) {
+            RoomCategory category = roomCategoryRepository.findById(room.getRoomCategory().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Room category not found with id: " + room.getRoomCategory().getId()));
+            existingRoom.setRoomCategory(category);
+        }
+
+        // Cập nhật các thông tin khác
+        existingRoom.setFloor(room.getFloor());
+        existingRoom.setStartDate(room.getStartDate());
+        existingRoom.setStatus(room.getStatus());
+        existingRoom.setNote(room.getNote());
+        existingRoom.setIsClean(room.getIsClean());
+        existingRoom.setCheckInDuration(room.getCheckInDuration());
+        existingRoom.setImg1(room.getImg1());
+        existingRoom.setImg2(room.getImg2());
+        existingRoom.setImg3(room.getImg3());
+        existingRoom.setImg4(room.getImg4());
+
+        // Lưu và trả về phòng đã cập nhật
+        return roomRepository.save(existingRoom);
     }
 
     @Override
