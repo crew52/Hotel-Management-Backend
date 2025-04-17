@@ -82,6 +82,11 @@ public class SecurityConfig {
                         // .requestMatchers(HttpMethod.GET, "/api/public/info").permitAll() // API công khai khác
                         .requestMatchers("/api/rooms/**").permitAll()
                         .requestMatchers("/api/room-categories/**").permitAll()
+                        .requestMatchers("api/permissions/**").permitAll()
+                        .requestMatchers("/api/roles/**").permitAll()
+                        .requestMatchers("/api/employees/**").permitAll()
+                        .requestMatchers("/api/activity-logs/**").permitAll()
+
 
                         // Các request còn lại cần phải xác thực
                         .anyRequest().authenticated()

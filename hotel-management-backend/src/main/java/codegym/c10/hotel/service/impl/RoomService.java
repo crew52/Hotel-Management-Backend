@@ -23,6 +23,7 @@ public class RoomService implements IRoomService {
     private IRoomCategoryRepository roomCategoryRepository;
 
     @Override
+    @LogActivity(action = "UPDATE_ROOM", description = "Cập nhật thông tin phòng")
     public Room update(Room room) {
         // Kiểm tra xem phòng có tồn tại không
         Room existingRoom = roomRepository.findById(room.getId())

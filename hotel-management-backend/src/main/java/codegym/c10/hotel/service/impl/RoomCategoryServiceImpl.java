@@ -1,6 +1,8 @@
 package codegym.c10.hotel.service.impl;
 
 import codegym.c10.hotel.eNum.RoomCategoryStatus;
+import codegym.c10.hotel.annotation.LogActivity;
+import codegym.c10.hotel.eNum.ExtraFeeType;
 import codegym.c10.hotel.entity.RoomCategory;
 import codegym.c10.hotel.repository.IRoomCategoryRepository;
 import codegym.c10.hotel.service.IRoomCategoryService;
@@ -10,6 +12,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 @Service
@@ -26,6 +29,7 @@ public class RoomCategoryServiceImpl implements IRoomCategoryService {
     public RoomCategory save(RoomCategory roomCategory) {
         return roomCategoryRepository.save(roomCategory);
     }
+
 
     @Override
     public Optional<RoomCategory> findById(Long id) {
@@ -55,14 +59,18 @@ public class RoomCategoryServiceImpl implements IRoomCategoryService {
     }
 
     @Override
+    @LogActivity(action = "UPDATE_ROOM_CATEGORY", description = "Cập nhật loại phòng")
     public RoomCategory update(RoomCategory roomCategory) {
+        // Kiểm tra mã 'code' có trùng với mã của các phòng khác không
         if (existsByCodeAndIdNot(roomCategory.getCode(), roomCategory.getId())) {
             throw new IllegalArgumentException("Room category code already exists.");
         }
 
+        // Tìm kiếm đối tượng RoomCategory cần cập nhật
         RoomCategory existingRoomCategory = roomCategoryRepository.findById(roomCategory.getId())
                 .orElseThrow(() -> new IllegalArgumentException("Room category not found"));
 
+        // Cập nhật các trường thông tin
         existingRoomCategory.setCode(roomCategory.getCode());
         existingRoomCategory.setName(roomCategory.getName());
         existingRoomCategory.setDescription(roomCategory.getDescription());
@@ -81,6 +89,7 @@ public class RoomCategoryServiceImpl implements IRoomCategoryService {
         existingRoomCategory.setStatus(roomCategory.getStatus());
         existingRoomCategory.setImgUrl(roomCategory.getImgUrl());
 
+        // Lưu lại đối tượng đã cập nhật
         return roomCategoryRepository.save(existingRoomCategory);
     }
 
