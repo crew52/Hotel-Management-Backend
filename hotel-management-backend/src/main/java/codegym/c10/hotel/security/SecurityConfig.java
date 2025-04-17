@@ -74,21 +74,20 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         // Cho phép truy cập các API đăng nhập, đăng ký công khai
                         .requestMatchers("/api/auth/**").permitAll()
-
-                        // --- QUAN TRỌNG: Định nghĩa các quy tắc phân quyền cho các API khác tại đây ---
-                        // Ví dụ:
-                         .requestMatchers("/api/admin/**").hasRole("ADMIN") // Chỉ ADMIN mới vào được /api/admin/**
-                        // .requestMatchers("/api/rooms/**").hasAnyRole("ADMIN", "RECEPTIONIST") // ADMIN hoặc RECEPTIONIST
-                        // .requestMatchers(HttpMethod.GET, "/api/public/info").permitAll() // API công khai khác
-                        .requestMatchers("/api/rooms/**").permitAll()
-                        .requestMatchers("/api/room-categories/**").permitAll()
-                        .requestMatchers("api/permissions/**").permitAll()
-                        .requestMatchers("/api/roles/**").permitAll()
-                        .requestMatchers("/api/employees/**").permitAll()
-                        .requestMatchers("/api/activity-logs/**").permitAll()
-
-
-                        // Các request còn lại cần phải xác thực
+                        
+                        // Định nghĩa quyền cho các nhóm API
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN") // Chỉ ADMIN mới vào được /api/admin/**
+                        
+                        // Tất cả các API khác đều yêu cầu xác thực
+                        .requestMatchers("/api/rooms/**").authenticated()
+                        .requestMatchers("/api/room-categories/**").authenticated()
+                        .requestMatchers("/api/permissions/**").authenticated()
+                        .requestMatchers("/api/roles/**").authenticated()
+                        .requestMatchers("/api/employees/**").authenticated()
+                        .requestMatchers("/api/activity-logs/**").authenticated()
+                        .requestMatchers("/api/logs/**").authenticated()
+                        
+                        // Các request còn lại cũng cần phải xác thực
                         .anyRequest().authenticated()
                 );
 

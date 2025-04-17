@@ -1,12 +1,10 @@
 package codegym.c10.hotel.aspect;
 
-import codegym.c10.hotel.annotation.LogActivity;
 import codegym.c10.hotel.dto.auth.UserPrinciple;
 import codegym.c10.hotel.entity.ActivityLog;
 import codegym.c10.hotel.entity.User;
 import codegym.c10.hotel.repository.IActivityLogRepository;
 import codegym.c10.hotel.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
@@ -17,81 +15,73 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.StringJoiner;
 
-/**
- * Aspect để tự động ghi log các hoạt động.
- * Bắt các phương thức trong package service có tên save*, update*, delete*, remove*
- * hoặc các phương thức được đánh dấu bằng annotation @LogActivity.
- */
 @Aspect
 @Component
-@RequiredArgsConstructor
 public class ActivityLoggingAspect {
 
     private static final Logger logger = LoggerFactory.getLogger(ActivityLoggingAspect.class);
-    
+
     private final IActivityLogRepository activityLogRepository;
     private final UserRepository userRepository;
 
-    /**
-     * Định nghĩa Pointcut:
-     * - Bắt tất cả các phương thức trong các sub-package của codegym.c10.hotel.service
-     * - VÀ tên phương thức bắt đầu bằng "save", "update", "delete", "remove"
-     * - HOẶC phương thức có annotation @LogActivity
-     * - HOẶC (tùy chọn) phương thức có annotation @Transactional và không phải là readOnly
-     */
-    @Pointcut("(execution(* codegym.c10.hotel.service..*.save*(..)) || " +
-              "execution(* codegym.c10.hotel.service..*.create*(..)) || " +
-              "execution(* codegym.c10.hotel.service..*.update*(..)) || " +
-              "execution(* codegym.c10.hotel.service..*.delete*(..)) || " +
-              "execution(* codegym.c10.hotel.service..*.remove*(..)) || " +
-              "execution(* codegym.c10.hotel.service..*.add*(..)) || " +
-              "execution(* codegym.c10.hotel.service..*.change*(..)) || " +
-              "@annotation(codegym.c10.hotel.annotation.LogActivity)) && " +
-              "!execution(* codegym.c10.hotel.service.user.UserService.loadUserByUsername(..))")
-    public void serviceModificationOrAnnotated() {}
+    public ActivityLoggingAspect(IActivityLogRepository activityLogRepository, UserRepository userRepository) {
+        this.activityLogRepository = activityLogRepository;
+        this.userRepository = userRepository;
+        logger.info("===== ACTIVITY LOGGING ASPECT INITIALIZED =====");
+    }
 
     /**
-     * Advice chạy sau khi phương thức khớp với pointcut 'serviceModificationOrAnnotated' thực thi thành công.
-     * Tự động lấy thông tin người dùng hiện tại từ SecurityContext và ghi log hoạt động.
-     *
-     * @param joinPoint Điểm cắt (phương thức được gọi)
+     * Chỉ theo dõi các phương thức có tên liên quan đến hành vi ghi dữ liệu (CUD).
      */
-    @AfterReturning(pointcut = "serviceModificationOrAnnotated()")
+    @Pointcut("" +
+            "execution(* codegym.c10.hotel.service..*.*save*(..)) || " +
+            "execution(* codegym.c10.hotel.service..*.*create*(..)) || " +
+            "execution(* codegym.c10.hotel.service..*.*update*(..)) || " +
+            "execution(* codegym.c10.hotel.service..*.*delete*(..)) || " +
+            "execution(* codegym.c10.hotel.service..*.*remove*(..)) || " +
+            "execution(* codegym.c10.hotel.service..*.*add*(..)) || " +
+            "execution(* codegym.c10.hotel.service..*.*change*(..))")
+    public void modifyingMethodsOnly() {}
+
+    @AfterReturning(pointcut = "modifyingMethodsOnly()")
     public void logActivity(JoinPoint joinPoint) {
         try {
             MethodSignature signature = (MethodSignature) joinPoint.getSignature();
             Method method = signature.getMethod();
-            LogActivity logActivityAnnotation = method.getAnnotation(LogActivity.class);
+            String methodName = method.getName().toLowerCase();
 
-            String action;
-            String description;
-            String methodName = method.getName();
-            String className = joinPoint.getTarget().getClass().getSimpleName();
-
-            if (logActivityAnnotation != null) {
-                action = logActivityAnnotation.action();
-                description = logActivityAnnotation.description();
-                if (description.isEmpty()) {
-                    description = "Đã thực hiện: " + action + " thông qua phương thức " + className + "." + methodName;
-                }
-            } else {
-                action = inferActionFromMethodName(methodName);
-                description = generateDefaultDescription(className, methodName, joinPoint.getArgs());
+            // Bước kiểm tra để loại bỏ chắc chắn method đọc dữ liệu
+            if (methodName.startsWith("find") ||
+                    methodName.startsWith("get") ||
+                    methodName.startsWith("load") ||
+                    methodName.startsWith("search") ||
+                    methodName.startsWith("list") ||
+                    methodName.startsWith("is") ||
+                    methodName.startsWith("exists") ||
+                    methodName.startsWith("count")) {
+                logger.debug("⛔ BỎ QUA log vì đây là phương thức đọc: {}", method.getName());
+                return;
             }
+
+            logger.info("===== ASPECT INTERCEPTED METHOD: {}.{} =====",
+                    joinPoint.getSignature().getDeclaringTypeName(),
+                    joinPoint.getSignature().getName());
+
+            String action = inferActionFromMethodName(method.getName());
+            String className = joinPoint.getTarget().getClass().getSimpleName();
+            String description = generateDefaultDescription(className, method.getName(), joinPoint.getArgs());
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = "SYSTEM";
             Long userIdValue = null;
 
             if (authentication != null && authentication.isAuthenticated() &&
-                !(authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser"))) {
+                    !(authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser"))) {
 
                 Object principal = authentication.getPrincipal();
                 if (principal instanceof UserPrinciple) {
@@ -103,14 +93,8 @@ public class ActivityLoggingAspect {
                     User userByUsername = userRepository.findByUsername(username);
                     if (userByUsername != null) {
                         userIdValue = userByUsername.getId();
-                    } else {
-                        logger.warn("Không tìm thấy user trong DB với username từ Principal: {}", username);
                     }
-                } else {
-                    logger.warn("Principal không phải là UserPrinciple hoặc String: {}", principal.getClass().getName());
                 }
-            } else {
-                logger.info("Không có người dùng nào được xác thực, hành động được thực hiện bởi SYSTEM hoặc anonymous.");
             }
 
             final Long userId = userIdValue;
@@ -127,8 +111,8 @@ public class ActivityLoggingAspect {
                         .build();
 
                 activityLogRepository.save(log);
-                logger.info("ACTIVITY LOGGED: User='{}'(ID={}), Action='{}', Description='{}'",
-                    username, userId, action, description);
+                logger.info("✅ ACTIVITY LOGGED: User='{}'(ID={}), Action='{}', Description='{}'",
+                        username, userId, action, description);
             } else {
                 ActivityLog systemLog = ActivityLog.builder()
                         .user(null)
@@ -137,12 +121,12 @@ public class ActivityLoggingAspect {
                         .description("[SYSTEM] " + description)
                         .build();
                 activityLogRepository.save(systemLog);
-                logger.info("ACTIVITY LOGGED: User='{}', Action='{}', Description='{}'",
+                logger.info("✅ ACTIVITY LOGGED: User='{}', Action='{}', Description='{}'",
                         username, action, "[SYSTEM] " + description);
             }
 
         } catch (Exception e) {
-            logger.error("Lỗi khi ghi log hoạt động cho phương thức {}.{}: {}",
+            logger.error("❌ Lỗi khi ghi log hoạt động: {}.{}: {}",
                     joinPoint.getSignature().getDeclaringTypeName(),
                     joinPoint.getSignature().getName(),
                     e.getMessage(), e);
@@ -151,14 +135,14 @@ public class ActivityLoggingAspect {
 
     private String inferActionFromMethodName(String methodName) {
         String lowerMethodName = methodName.toLowerCase();
-        if (lowerMethodName.startsWith("save") || lowerMethodName.startsWith("create") || lowerMethodName.startsWith("add") || lowerMethodName.startsWith("register")) {
+        if (lowerMethodName.contains("save") || lowerMethodName.contains("create") ||
+                lowerMethodName.contains("add") || lowerMethodName.contains("register") || lowerMethodName.contains("insert")) {
             return "CREATE";
-        } else if (lowerMethodName.startsWith("update") || lowerMethodName.startsWith("modify") || lowerMethodName.startsWith("change") || lowerMethodName.startsWith("edit")) {
+        } else if (lowerMethodName.contains("update") || lowerMethodName.contains("modify") ||
+                lowerMethodName.contains("change") || lowerMethodName.contains("edit")) {
             return "UPDATE";
-        } else if (lowerMethodName.startsWith("delete") || lowerMethodName.startsWith("remove")) {
+        } else if (lowerMethodName.contains("delete") || lowerMethodName.contains("remove")) {
             return "DELETE";
-        } else if (lowerMethodName.startsWith("find") || lowerMethodName.startsWith("get") || lowerMethodName.startsWith("load") || lowerMethodName.startsWith("search")) {
-            return "READ";
         }
         return methodName.toUpperCase();
     }
@@ -175,9 +159,7 @@ public class ActivityLoggingAspect {
                         Method getIdMethod = arg.getClass().getMethod("getId");
                         Object id = getIdMethod.invoke(arg);
                         argDesc += "[id=" + id + "]";
-                    } catch (NoSuchMethodException e) {
-                    } catch (Exception e) {
-                        logger.trace("Error getting id for arg: {}", arg.getClass().getName(), e);
+                    } catch (Exception ignored) {
                     }
                     sj.add(argDesc);
                 }
@@ -185,4 +167,4 @@ public class ActivityLoggingAspect {
         }
         return String.format("Executed method: %s.%s%s", className, methodName, sj.toString());
     }
-} 
+}
