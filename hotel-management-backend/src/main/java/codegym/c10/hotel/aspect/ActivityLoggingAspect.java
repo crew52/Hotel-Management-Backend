@@ -10,19 +10,24 @@ import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
 import java.util.Optional;
+import java.util.StringJoiner;
 
 /**
- * Aspect để tự động ghi log các hoạt động được đánh dấu bằng annotation @LogActivity.
+ * Aspect để tự động ghi log các hoạt động.
+ * Bắt các phương thức trong package service có tên save*, update*, delete*, remove*
+ * hoặc các phương thức được đánh dấu bằng annotation @LogActivity.
  */
 @Aspect
 @Component
@@ -35,51 +40,81 @@ public class ActivityLoggingAspect {
     private final UserRepository userRepository;
 
     /**
-     * Advice chạy sau khi phương thức có annotation @LogActivity thực thi thành công.
+     * Định nghĩa Pointcut:
+     * - Bắt tất cả các phương thức trong các sub-package của codegym.c10.hotel.service
+     * - VÀ tên phương thức bắt đầu bằng "save", "update", "delete", "remove"
+     * - HOẶC phương thức có annotation @LogActivity
+     * - HOẶC (tùy chọn) phương thức có annotation @Transactional và không phải là readOnly
+     */
+    @Pointcut("(execution(* codegym.c10.hotel.service..*.save*(..)) || " +
+              "execution(* codegym.c10.hotel.service..*.create*(..)) || " +
+              "execution(* codegym.c10.hotel.service..*.update*(..)) || " +
+              "execution(* codegym.c10.hotel.service..*.delete*(..)) || " +
+              "execution(* codegym.c10.hotel.service..*.remove*(..)) || " +
+              "execution(* codegym.c10.hotel.service..*.add*(..)) || " +
+              "execution(* codegym.c10.hotel.service..*.change*(..)) || " +
+              "@annotation(codegym.c10.hotel.annotation.LogActivity)) && " +
+              "!execution(* codegym.c10.hotel.service.user.UserService.loadUserByUsername(..))")
+    public void serviceModificationOrAnnotated() {}
+
+    /**
+     * Advice chạy sau khi phương thức khớp với pointcut 'serviceModificationOrAnnotated' thực thi thành công.
      * Tự động lấy thông tin người dùng hiện tại từ SecurityContext và ghi log hoạt động.
      *
      * @param joinPoint Điểm cắt (phương thức được gọi)
      */
-    @AfterReturning(pointcut = "@annotation(codegym.c10.hotel.annotation.LogActivity)")
+    @AfterReturning(pointcut = "serviceModificationOrAnnotated()")
     public void logActivity(JoinPoint joinPoint) {
         try {
-            // 1. Lấy thông tin annotation từ phương thức
             MethodSignature signature = (MethodSignature) joinPoint.getSignature();
             Method method = signature.getMethod();
             LogActivity logActivityAnnotation = method.getAnnotation(LogActivity.class);
 
-            String action = logActivityAnnotation.action();
-            String description = logActivityAnnotation.description();
-            if (description.isEmpty()) {
-                // Tạo mô tả mặc định nếu không được cung cấp
-                description = "Đã thực hiện thao tác: " + action;
+            String action;
+            String description;
+            String methodName = method.getName();
+            String className = joinPoint.getTarget().getClass().getSimpleName();
+
+            if (logActivityAnnotation != null) {
+                action = logActivityAnnotation.action();
+                description = logActivityAnnotation.description();
+                if (description.isEmpty()) {
+                    description = "Đã thực hiện: " + action + " thông qua phương thức " + className + "." + methodName;
+                }
+            } else {
+                action = inferActionFromMethodName(methodName);
+                description = generateDefaultDescription(className, methodName, joinPoint.getArgs());
             }
 
-            // 2. Lấy thông tin người dùng từ SecurityContext
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            final String[] username = {"SYSTEM"}; // Mặc định nếu không xác định được người dùng
+            String username = "SYSTEM";
             Long userIdValue = null;
 
-            if (authentication != null && authentication.isAuthenticated() && 
+            if (authentication != null && authentication.isAuthenticated() &&
                 !(authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser"))) {
-                
+
                 Object principal = authentication.getPrincipal();
                 if (principal instanceof UserPrinciple) {
                     UserPrinciple userPrinciple = (UserPrinciple) principal;
                     userIdValue = userPrinciple.getId();
-                    username[0] = userPrinciple.getUsername();
+                    username = userPrinciple.getUsername();
                 } else if (principal instanceof String) {
-                    // Nếu principal là String, đó có thể là username
-                    username[0] = (String) principal;
-                    User user = userRepository.findByUsername(username[0]);
-                    if (user != null) {
-                        userIdValue = user.getId();
+                    username = (String) principal;
+                    User userByUsername = userRepository.findByUsername(username);
+                    if (userByUsername != null) {
+                        userIdValue = userByUsername.getId();
+                    } else {
+                        logger.warn("Không tìm thấy user trong DB với username từ Principal: {}", username);
                     }
+                } else {
+                    logger.warn("Principal không phải là UserPrinciple hoặc String: {}", principal.getClass().getName());
                 }
+            } else {
+                logger.info("Không có người dùng nào được xác thực, hành động được thực hiện bởi SYSTEM hoặc anonymous.");
             }
 
-            // 3. Tạo và lưu log
-            final Long userId = userIdValue; // Tạo biến final để sử dụng trong lambda
+            final Long userId = userIdValue;
+
             if (userId != null) {
                 User user = userRepository.findById(userId)
                         .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + userId));
@@ -90,15 +125,64 @@ public class ActivityLoggingAspect {
                         .timestamp(LocalDateTime.now())
                         .description(description)
                         .build();
-                
+
                 activityLogRepository.save(log);
-                logger.info("Đã ghi log hoạt động: Người dùng='{}', Hành động='{}', Mô tả='{}'", 
-                    username[0], action, description);
+                logger.info("ACTIVITY LOGGED: User='{}'(ID={}), Action='{}', Description='{}'",
+                    username, userId, action, description);
             } else {
-                logger.warn("Không thể ghi log hoạt động vì không xác định được userId. Hành động: {}", action);
+                ActivityLog systemLog = ActivityLog.builder()
+                        .user(null)
+                        .action(action)
+                        .timestamp(LocalDateTime.now())
+                        .description("[SYSTEM] " + description)
+                        .build();
+                activityLogRepository.save(systemLog);
+                logger.info("ACTIVITY LOGGED: User='{}', Action='{}', Description='{}'",
+                        username, action, "[SYSTEM] " + description);
             }
+
         } catch (Exception e) {
-            logger.error("Lỗi khi ghi log hoạt động: {}", e.getMessage(), e);
+            logger.error("Lỗi khi ghi log hoạt động cho phương thức {}.{}: {}",
+                    joinPoint.getSignature().getDeclaringTypeName(),
+                    joinPoint.getSignature().getName(),
+                    e.getMessage(), e);
         }
+    }
+
+    private String inferActionFromMethodName(String methodName) {
+        String lowerMethodName = methodName.toLowerCase();
+        if (lowerMethodName.startsWith("save") || lowerMethodName.startsWith("create") || lowerMethodName.startsWith("add") || lowerMethodName.startsWith("register")) {
+            return "CREATE";
+        } else if (lowerMethodName.startsWith("update") || lowerMethodName.startsWith("modify") || lowerMethodName.startsWith("change") || lowerMethodName.startsWith("edit")) {
+            return "UPDATE";
+        } else if (lowerMethodName.startsWith("delete") || lowerMethodName.startsWith("remove")) {
+            return "DELETE";
+        } else if (lowerMethodName.startsWith("find") || lowerMethodName.startsWith("get") || lowerMethodName.startsWith("load") || lowerMethodName.startsWith("search")) {
+            return "READ";
+        }
+        return methodName.toUpperCase();
+    }
+
+    private String generateDefaultDescription(String className, String methodName, Object[] args) {
+        StringJoiner sj = new StringJoiner(", ", "(", ")");
+        if (args != null) {
+            for (Object arg : args) {
+                if (arg instanceof String || arg instanceof Number || arg instanceof Boolean || arg == null) {
+                    sj.add(String.valueOf(arg));
+                } else {
+                    String argDesc = arg.getClass().getSimpleName();
+                    try {
+                        Method getIdMethod = arg.getClass().getMethod("getId");
+                        Object id = getIdMethod.invoke(arg);
+                        argDesc += "[id=" + id + "]";
+                    } catch (NoSuchMethodException e) {
+                    } catch (Exception e) {
+                        logger.trace("Error getting id for arg: {}", arg.getClass().getName(), e);
+                    }
+                    sj.add(argDesc);
+                }
+            }
+        }
+        return String.format("Executed method: %s.%s%s", className, methodName, sj.toString());
     }
 } 
