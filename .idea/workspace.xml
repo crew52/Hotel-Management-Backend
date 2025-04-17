@@ -5,25 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4573c98e-fe27-4bec-b20b-762c978e6ce2" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/controller/RoomCategoryController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/exception/ErrorResponse.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/exception/RoomCategoryHandler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/repository/IRoomCategoryRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/service/IGenerateService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/service/IRoomCategoryService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/service/impl/RoomCategoryServiceImpl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hotel-management-backend/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hotel-management-backend/document/Hotel-management-create.sql" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/document/Hotel-management-create.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/ActivityLog.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/ActivityLog.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/BaseEntity.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/BaseEntity.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Employee.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Employee.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Permission.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Permission.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Role.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Role.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Room.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/Room.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/RoomCategory.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/RoomCategory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/User.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/entity/User.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/exception/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/exception/GlobalExceptionHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/repository/RoomRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/dataSources/4f2ffacf-d317-4222-aed5-59219df9a85e.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/4f2ffacf-d317-4222-aed5-59219df9a85e.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/controller/PermissionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/controller/PermissionController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/controller/RoleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/controller/RoleController.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -61,6 +47,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="RECENT_BRANCH_BY_REPOSITORY">
+      <map>
+        <entry key="$PROJECT_DIR$" value="dev" />
+      </map>
+    </option>
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RESET_MODE" value="HARD" />
   </component>
@@ -105,33 +96,34 @@
     <option name="showLibraryContents" value="true" />
     <option name="showScratchesAndConsoles" value="false" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Gradle.Build hotel-management-backend.executor": "Run",
-    "RequestMappingsPanelOrder0": "0",
-    "RequestMappingsPanelOrder1": "1",
-    "RequestMappingsPanelWidth0": "75",
-    "RequestMappingsPanelWidth1": "75",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "Spring Boot.HotelManagementBackendApplication.executor": "Run",
-    "git-widget-placeholder": "Merging dev",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "C:/Users/admin/OneDrive/Desktop/Hotel-Management/hotel-management-backend",
-    "node.js.detected.package.eslint": "true",
-    "node.js.detected.package.tslint": "true",
-    "node.js.selected.package.eslint": "(autodetect)",
-    "node.js.selected.package.tslint": "(autodetect)",
-    "nodejs_package_manager_path": "npm",
-    "vue.rearranger.settings.migration": "true"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Gradle.Build hotel-management-backend.executor&quot;: &quot;Run&quot;,
+    &quot;RequestMappingsPanelOrder0&quot;: &quot;0&quot;,
+    &quot;RequestMappingsPanelOrder1&quot;: &quot;1&quot;,
+    &quot;RequestMappingsPanelWidth0&quot;: &quot;75&quot;,
+    &quot;RequestMappingsPanelWidth1&quot;: &quot;75&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;Spring Boot.HotelManagementBackendApplication.executor&quot;: &quot;Run&quot;,
+    &quot;database.data.extractors.current.export.id&quot;: &quot;SQL Inserts&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Login&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/admin/OneDrive/Desktop/Hotel-Management/hotel-management-backend&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   },
-  "keyToStringList": {
-    "DatabaseDriversLRU": [
-      "mysql"
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;mysql&quot;
     ]
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\admin\Desktop\hotel-management-backend\hotel-management-backend\src\main\java\codegym\c10\hotel\security" />
@@ -179,7 +171,12 @@
       <workItem from="1744615563436" duration="6444000" />
       <workItem from="1744624203165" duration="868000" />
       <workItem from="1744625497974" duration="404000" />
-      <workItem from="1744681058388" duration="2296000" />
+      <workItem from="1744681058388" duration="5344000" />
+      <workItem from="1744700239680" duration="5797000" />
+      <workItem from="1744707402980" duration="5527000" />
+      <workItem from="1744723675293" duration="6530000" />
+      <workItem from="1744767288822" duration="6760000" />
+      <workItem from="1744786050722" duration="4237000" />
     </task>
     <servers />
   </component>
