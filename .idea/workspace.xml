@@ -4,12 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="4573c98e-fe27-4bec-b20b-762c978e6ce2" name="Changes" comment="">
+    <list default="true" id="4573c98e-fe27-4bec-b20b-762c978e6ce2" name="Changes" comment="checkout">
       <change beforePath="$PROJECT_DIR$/.idea/dataSources.local.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources.local.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/4f2ffacf-d317-4222-aed5-59219df9a85e.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/4f2ffacf-d317-4222-aed5-59219df9a85e.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/controller/PermissionController.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/controller/PermissionController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/controller/RoleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/controller/RoleController.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -107,7 +104,7 @@
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
     &quot;Spring Boot.HotelManagementBackendApplication.executor&quot;: &quot;Run&quot;,
     &quot;database.data.extractors.current.export.id&quot;: &quot;SQL Inserts&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;Login&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;Employee&quot;,
     &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/admin/OneDrive/Desktop/Hotel-Management/hotel-management-backend&quot;,
@@ -176,8 +173,18 @@
       <workItem from="1744707402980" duration="5527000" />
       <workItem from="1744723675293" duration="6530000" />
       <workItem from="1744767288822" duration="6760000" />
-      <workItem from="1744786050722" duration="4237000" />
+      <workItem from="1744786050722" duration="10637000" />
+      <workItem from="1744855549938" duration="2131000" />
     </task>
+    <task id="LOCAL-00001" summary="checkout">
+      <option name="closed" value="true" />
+      <created>1744790706010</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1744790706010</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -193,5 +200,24 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="checkout" />
+    <option name="LAST_COMMIT_MESSAGE" value="checkout" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/hotel-management-backend/src/main/java/codegym/c10/hotel/controller/RoomCategoryController.java</url>
+          <line>65</line>
+          <properties class="codegym.c10.hotel.controller.RoomCategoryController" method="updateRoomCategory">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>

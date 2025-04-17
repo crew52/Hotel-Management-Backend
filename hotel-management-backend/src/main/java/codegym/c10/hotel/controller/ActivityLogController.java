@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/activity-logs")
+@RequestMapping({"/api/activity-logs", "/api/logs"})
 @RequiredArgsConstructor
 public class ActivityLogController {
 
@@ -29,6 +29,17 @@ public class ActivityLogController {
     }
 
     @GetMapping("/{userId}/userId")
+    public ResponseEntity<Page<ActivityLogDTO>> getLogsByUserIdWithPath(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("timestamp").descending());
+        Page<ActivityLogDTO> logs = activityLogService.getLogsByUserId(userId, pageable);
+        return ResponseEntity.ok(logs);
+    }
+    
+    @GetMapping("/{userId}")
     public ResponseEntity<Page<ActivityLogDTO>> getLogsByUserId(
             @PathVariable Long userId,
             @RequestParam(defaultValue = "0") int page,

@@ -19,6 +19,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import codegym.c10.hotel.annotation.LogActivity;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -75,6 +76,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @LogActivity(action = "LOGIN", description = "Người dùng đã đăng nhập")
     public ApiResponse loginUser(LoginRequest loginRequest) {
         String loginInput = loginRequest.getUsernameOrEmail();
         User user = userRepository.findByUsername(loginInput);
@@ -198,6 +200,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @LogActivity(action = "CHANGE_PASSWORD", description = "Người dùng đã thay đổi mật khẩu")
     public ApiResponse changePassword(String username, String oldPassword, String newPassword) {
         User user = userRepository.findByUsername(username);
         if (user == null) {
