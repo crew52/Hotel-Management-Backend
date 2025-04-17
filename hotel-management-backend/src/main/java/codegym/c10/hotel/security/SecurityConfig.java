@@ -85,6 +85,8 @@ public class SecurityConfig {
                         .requestMatchers("api/permissions/**").permitAll()
                         .requestMatchers("/api/roles/**").permitAll()
                         .requestMatchers("/api/employees/**").permitAll()
+                        .requestMatchers("/api/activity-logs/**").permitAll()
+
 
                         // Các request còn lại cần phải xác thực
                         .anyRequest().authenticated()
