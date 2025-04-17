@@ -84,6 +84,11 @@ public class UserService implements IUserService {
         if (!this.passwordEncoder.matches(loginRequest.getPassword(), user.getPasswordHash())) {
             return new ApiResponse(false, "Tài khoản hoặc mật khẩu không chính xác");
         }
+        
+        // Kiểm tra xem tài khoản có bị khóa hay không
+        if (user.getIsLocked() != null && user.getIsLocked()) {
+            return new ApiResponse(false, "Tài khoản này đã bị khóa");
+        }
 
         // Sử dụng UserPrinciple.build(user) để lấy thông tin chính xác của user bao gồm authorities
         UserDetails userDetails = UserPrinciple.build(user);
