@@ -1,5 +1,6 @@
 package codegym.c10.hotel.service.impl;
 
+import codegym.c10.hotel.eNum.RoomCategoryStatus;
 import codegym.c10.hotel.annotation.LogActivity;
 import codegym.c10.hotel.eNum.ExtraFeeType;
 import codegym.c10.hotel.entity.RoomCategory;
@@ -7,6 +8,8 @@ import codegym.c10.hotel.repository.IRoomCategoryRepository;
 import codegym.c10.hotel.service.IRoomCategoryService;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -35,14 +38,13 @@ public class RoomCategoryServiceImpl implements IRoomCategoryService {
 
     @Override
     public void remove(Long id) {
-        Optional<RoomCategory> roomCategory = roomCategoryRepository.findById(id);  // Tìm phòng theo id
-
+        Optional<RoomCategory> roomCategory = roomCategoryRepository.findById(id);
         if (roomCategory.isPresent()) {
             RoomCategory category = roomCategory.get();
-            category.setDeleted(true);  // Cập nhật trường deleted thành true
-            roomCategoryRepository.save(category);  // Lưu thay đổi vào DB
+            category.setDeleted(true);
+            roomCategoryRepository.save(category);
         } else {
-            throw new EntityNotFoundException("Room category not found with id: " + id);  // Nếu không tìm thấy bản ghi
+            throw new EntityNotFoundException("Room category not found with id: " + id);
         }
     }
 
@@ -89,5 +91,28 @@ public class RoomCategoryServiceImpl implements IRoomCategoryService {
 
         // Lưu lại đối tượng đã cập nhật
         return roomCategoryRepository.save(existingRoomCategory);
+    }
+
+    @Override
+    public Page<RoomCategory> advancedSearch(
+            String keyword,
+            RoomCategoryStatus status,
+            Double minHourlyPrice,
+            Double maxHourlyPrice,
+            Double minDailyPrice,
+            Double maxDailyPrice,
+            Double minOvernightPrice,
+            Double maxOvernightPrice,
+            Pageable pageable) {
+        return roomCategoryRepository.advancedSearch(
+                keyword != null ? keyword.toLowerCase() : null,
+                status,
+                minHourlyPrice,
+                maxHourlyPrice,
+                minDailyPrice,
+                maxDailyPrice,
+                minOvernightPrice,
+                maxOvernightPrice,
+                pageable);
     }
 }

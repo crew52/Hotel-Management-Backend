@@ -1,6 +1,5 @@
 package codegym.c10.hotel.service.impl;
 
-import codegym.c10.hotel.annotation.LogActivity;
 import codegym.c10.hotel.eNum.RoomStatus;
 import codegym.c10.hotel.entity.Room;
 import codegym.c10.hotel.entity.RoomCategory;
@@ -26,58 +25,30 @@ public class RoomService implements IRoomService {
     @Override
     @LogActivity(action = "UPDATE_ROOM", description = "Cập nhật thông tin phòng")
     public Room update(Room room) {
-        Long roomId = room.getId();
-        Room existingRoom = roomRepository.findById(roomId)
-                .orElseThrow(() -> new EntityNotFoundException("Room not found with id: " + roomId));
-        
-        // Cập nhật các trường thông tin
+        // Kiểm tra xem phòng có tồn tại không
+        Room existingRoom = roomRepository.findById(room.getId())
+                .orElseThrow(() -> new EntityNotFoundException("Room not found with id: " + room.getId()));
+
+        // Kiểm tra và cập nhật room category nếu có thay đổi
         if (room.getRoomCategory() != null && room.getRoomCategory().getId() != null) {
-            Long categoryId = room.getRoomCategory().getId();
-            RoomCategory category = roomCategoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new EntityNotFoundException("RoomCategory not found with id: " + categoryId));
+            RoomCategory category = roomCategoryRepository.findById(room.getRoomCategory().getId())
+                    .orElseThrow(() -> new EntityNotFoundException("Room category not found with id: " + room.getRoomCategory().getId()));
             existingRoom.setRoomCategory(category);
         }
-        
-        if (room.getFloor() != null) {
-            existingRoom.setFloor(room.getFloor());
-        }
-        
-        if (room.getStartDate() != null) {
-            existingRoom.setStartDate(room.getStartDate());
-        }
-        
-        if (room.getStatus() != null) {
-            existingRoom.setStatus(room.getStatus());
-        }
-        
-        if (room.getNote() != null) {
-            existingRoom.setNote(room.getNote());
-        }
-        
-        if (room.getIsClean() != null) {
-            existingRoom.setIsClean(room.getIsClean());
-        }
-        
-        if (room.getCheckInDuration() != null) {
-            existingRoom.setCheckInDuration(room.getCheckInDuration());
-        }
-        
-        if (room.getImg1() != null) {
-            existingRoom.setImg1(room.getImg1());
-        }
-        
-        if (room.getImg2() != null) {
-            existingRoom.setImg2(room.getImg2());
-        }
-        
-        if (room.getImg3() != null) {
-            existingRoom.setImg3(room.getImg3());
-        }
-        
-        if (room.getImg4() != null) {
-            existingRoom.setImg4(room.getImg4());
-        }
-        
+
+        // Cập nhật các thông tin khác
+        existingRoom.setFloor(room.getFloor());
+        existingRoom.setStartDate(room.getStartDate());
+        existingRoom.setStatus(room.getStatus());
+        existingRoom.setNote(room.getNote());
+        existingRoom.setIsClean(room.getIsClean());
+        existingRoom.setCheckInDuration(room.getCheckInDuration());
+        existingRoom.setImg1(room.getImg1());
+        existingRoom.setImg2(room.getImg2());
+        existingRoom.setImg3(room.getImg3());
+        existingRoom.setImg4(room.getImg4());
+
+        // Lưu và trả về phòng đã cập nhật
         return roomRepository.save(existingRoom);
     }
 

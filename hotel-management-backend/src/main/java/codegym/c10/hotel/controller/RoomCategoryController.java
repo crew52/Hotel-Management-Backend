@@ -1,5 +1,6 @@
 package codegym.c10.hotel.controller;
 
+import codegym.c10.hotel.eNum.RoomCategoryStatus;
 import codegym.c10.hotel.entity.RoomCategory;
 import codegym.c10.hotel.exception.ErrorResponse;
 import codegym.c10.hotel.exception.RoomCategoryHandler;
@@ -7,6 +8,10 @@ import codegym.c10.hotel.service.IRoomCategoryService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -39,13 +44,33 @@ public class RoomCategoryController {
         return new ResponseEntity<>(roomCategories, HttpStatus.OK);
     }
 
+    @GetMapping("/search")
+    public ResponseEntity<Page<RoomCategory>> searchRoomCategories(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) RoomCategoryStatus status,
+            @RequestParam(required = false) Double minHourlyPrice,
+            @RequestParam(required = false) Double maxHourlyPrice,
+            @RequestParam(required = false) Double minDailyPrice,
+            @RequestParam(required = false) Double maxDailyPrice,
+            @RequestParam(required = false) Double minOvernightPrice,
+            @RequestParam(required = false) Double maxOvernightPrice,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        Page<RoomCategory> categories = roomCategoryService.advancedSearch(
+                keyword, status, minHourlyPrice, maxHourlyPrice,
+                minDailyPrice, maxDailyPrice, minOvernightPrice, maxOvernightPrice, pageable);
+        return ResponseEntity.ok(categories);
+    }
+
     @DeleteMapping("/{id}/delete")
     public ResponseEntity<Void> removeRoomCategory(@PathVariable Long id) {
         try {
-            roomCategoryService.remove(id);  // Gọi service để cập nhật trạng thái deleted
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);  // Trả về trạng thái "No Content" nếu thành công
+            roomCategoryService.remove(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (EntityNotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);  // Trả về lỗi "Not Found" nếu không tìm thấy bản ghi
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 
@@ -68,6 +93,4 @@ public class RoomCategoryController {
                                                 BindingResult bindingResult) {
         return roomCategoryHandler.updateRoomCategory(id, roomCategory, bindingResult);
     }
-
-
 }

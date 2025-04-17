@@ -69,4 +69,17 @@ public class RoomController {
         return ResponseEntity.status(HttpStatus.CREATED).body(savedRoom);
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateRoom(@PathVariable Long id, @Valid @RequestBody Room room) {
+        try {
+            room.setId(id);
+            Room updatedRoom = roomService.update(room);
+            return ResponseEntity.ok(updatedRoom);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error updating room: " + e.getMessage());
+        }
+    }
 }
