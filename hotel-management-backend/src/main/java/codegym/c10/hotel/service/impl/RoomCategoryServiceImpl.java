@@ -1,5 +1,6 @@
 package codegym.c10.hotel.service.impl;
 
+import codegym.c10.hotel.annotation.LogActivity;
 import codegym.c10.hotel.eNum.ExtraFeeType;
 import codegym.c10.hotel.entity.RoomCategory;
 import codegym.c10.hotel.repository.IRoomCategoryRepository;
@@ -56,6 +57,7 @@ public class RoomCategoryServiceImpl implements IRoomCategoryService {
     }
 
     @Override
+    @LogActivity(action = "UPDATE_ROOM_CATEGORY", description = "Cập nhật loại phòng")
     public RoomCategory update(RoomCategory roomCategory) {
         // Kiểm tra mã 'code' có trùng với mã của các phòng khác không
         if (existsByCodeAndIdNot(roomCategory.getCode(), roomCategory.getId())) {
