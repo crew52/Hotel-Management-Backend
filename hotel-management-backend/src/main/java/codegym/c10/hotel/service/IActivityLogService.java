@@ -1,11 +1,11 @@
 package codegym.c10.hotel.service;
 
 import codegym.c10.hotel.dto.ActivityLogDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+
+import java.util.List;
 
 public interface IActivityLogService {
-    Page<ActivityLogDTO> getAllActivityLogs(Pageable pageable);
-    Page<ActivityLogDTO> getLogsByUserId(Long userId, Pageable pageable);
+    List<ActivityLogDTO> getAllActivityLogs();
+    List<ActivityLogDTO> getLogsByUserId(Long userId);
 }
 

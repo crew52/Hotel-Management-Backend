@@ -1,15 +1,14 @@
 package codegym.c10.hotel.aspect;
 
-import codegym.c10.hotel.annotation.LogActivity;
 import codegym.c10.hotel.dto.auth.UserPrinciple;
 import codegym.c10.hotel.entity.ActivityLog;
 import codegym.c10.hotel.entity.User;
 import codegym.c10.hotel.repository.IActivityLogRepository;
 import codegym.c10.hotel.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,67 +18,87 @@ import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.StringJoiner;
 
-/**
- * Aspect để tự động ghi log các hoạt động được đánh dấu bằng annotation @LogActivity.
- */
 @Aspect
 @Component
-@RequiredArgsConstructor
 public class ActivityLoggingAspect {
 
     private static final Logger logger = LoggerFactory.getLogger(ActivityLoggingAspect.class);
-    
+
     private final IActivityLogRepository activityLogRepository;
     private final UserRepository userRepository;
 
+    public ActivityLoggingAspect(IActivityLogRepository activityLogRepository, UserRepository userRepository) {
+        this.activityLogRepository = activityLogRepository;
+        this.userRepository = userRepository;
+        logger.info("===== ACTIVITY LOGGING ASPECT INITIALIZED =====");
+    }
+
     /**
-     * Advice chạy sau khi phương thức có annotation @LogActivity thực thi thành công.
-     * Tự động lấy thông tin người dùng hiện tại từ SecurityContext và ghi log hoạt động.
-     *
-     * @param joinPoint Điểm cắt (phương thức được gọi)
+     * Chỉ theo dõi các phương thức có tên liên quan đến hành vi ghi dữ liệu (CUD).
      */
-    @AfterReturning(pointcut = "@annotation(codegym.c10.hotel.annotation.LogActivity)")
+    @Pointcut("" +
+            "execution(* codegym.c10.hotel.service..*.*save*(..)) || " +
+            "execution(* codegym.c10.hotel.service..*.*create*(..)) || " +
+            "execution(* codegym.c10.hotel.service..*.*update*(..)) || " +
+            "execution(* codegym.c10.hotel.service..*.*delete*(..)) || " +
+            "execution(* codegym.c10.hotel.service..*.*remove*(..)) || " +
+            "execution(* codegym.c10.hotel.service..*.*add*(..)) || " +
+            "execution(* codegym.c10.hotel.service..*.*change*(..))")
+    public void modifyingMethodsOnly() {}
+
+    @AfterReturning(pointcut = "modifyingMethodsOnly()")
     public void logActivity(JoinPoint joinPoint) {
         try {
-            // 1. Lấy thông tin annotation từ phương thức
             MethodSignature signature = (MethodSignature) joinPoint.getSignature();
             Method method = signature.getMethod();
-            LogActivity logActivityAnnotation = method.getAnnotation(LogActivity.class);
+            String methodName = method.getName().toLowerCase();
 
-            String action = logActivityAnnotation.action();
-            String description = logActivityAnnotation.description();
-            if (description.isEmpty()) {
-                // Tạo mô tả mặc định nếu không được cung cấp
-                description = "Đã thực hiện thao tác: " + action;
+            // Bước kiểm tra để loại bỏ chắc chắn method đọc dữ liệu
+            if (methodName.startsWith("find") ||
+                    methodName.startsWith("get") ||
+                    methodName.startsWith("load") ||
+                    methodName.startsWith("search") ||
+                    methodName.startsWith("list") ||
+                    methodName.startsWith("is") ||
+                    methodName.startsWith("exists") ||
+                    methodName.startsWith("count")) {
+                logger.debug("⛔ BỎ QUA log vì đây là phương thức đọc: {}", method.getName());
+                return;
             }
 
-            // 2. Lấy thông tin người dùng từ SecurityContext
+            logger.info("===== ASPECT INTERCEPTED METHOD: {}.{} =====",
+                    joinPoint.getSignature().getDeclaringTypeName(),
+                    joinPoint.getSignature().getName());
+
+            String action = inferActionFromMethodName(method.getName());
+            String className = joinPoint.getTarget().getClass().getSimpleName();
+            String description = generateDefaultDescription(className, method.getName(), joinPoint.getArgs());
+
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            final String[] username = {"SYSTEM"}; // Mặc định nếu không xác định được người dùng
+            String username = "SYSTEM";
             Long userIdValue = null;
 
-            if (authentication != null && authentication.isAuthenticated() && 
-                !(authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser"))) {
-                
+            if (authentication != null && authentication.isAuthenticated() &&
+                    !(authentication.getPrincipal() instanceof String && authentication.getPrincipal().equals("anonymousUser"))) {
+
                 Object principal = authentication.getPrincipal();
                 if (principal instanceof UserPrinciple) {
                     UserPrinciple userPrinciple = (UserPrinciple) principal;
                     userIdValue = userPrinciple.getId();
-                    username[0] = userPrinciple.getUsername();
+                    username = userPrinciple.getUsername();
                 } else if (principal instanceof String) {
-                    // Nếu principal là String, đó có thể là username
-                    username[0] = (String) principal;
-                    User user = userRepository.findByUsername(username[0]);
-                    if (user != null) {
-                        userIdValue = user.getId();
+                    username = (String) principal;
+                    User userByUsername = userRepository.findByUsername(username);
+                    if (userByUsername != null) {
+                        userIdValue = userByUsername.getId();
                     }
                 }
             }
 
-            // 3. Tạo và lưu log
-            final Long userId = userIdValue; // Tạo biến final để sử dụng trong lambda
+            final Long userId = userIdValue;
+
             if (userId != null) {
                 User user = userRepository.findById(userId)
                         .orElseThrow(() -> new RuntimeException("Không tìm thấy người dùng với ID: " + userId));
@@ -90,15 +109,62 @@ public class ActivityLoggingAspect {
                         .timestamp(LocalDateTime.now())
                         .description(description)
                         .build();
-                
+
                 activityLogRepository.save(log);
-                logger.info("Đã ghi log hoạt động: Người dùng='{}', Hành động='{}', Mô tả='{}'", 
-                    username[0], action, description);
+                logger.info("✅ ACTIVITY LOGGED: User='{}'(ID={}), Action='{}', Description='{}'",
+                        username, userId, action, description);
             } else {
-                logger.warn("Không thể ghi log hoạt động vì không xác định được userId. Hành động: {}", action);
+                ActivityLog systemLog = ActivityLog.builder()
+                        .user(null)
+                        .action(action)
+                        .timestamp(LocalDateTime.now())
+                        .description("[SYSTEM] " + description)
+                        .build();
+                activityLogRepository.save(systemLog);
+                logger.info("✅ ACTIVITY LOGGED: User='{}', Action='{}', Description='{}'",
+                        username, action, "[SYSTEM] " + description);
             }
+
         } catch (Exception e) {
-            logger.error("Lỗi khi ghi log hoạt động: {}", e.getMessage(), e);
+            logger.error("❌ Lỗi khi ghi log hoạt động: {}.{}: {}",
+                    joinPoint.getSignature().getDeclaringTypeName(),
+                    joinPoint.getSignature().getName(),
+                    e.getMessage(), e);
         }
     }
-} 
+
+    private String inferActionFromMethodName(String methodName) {
+        String lowerMethodName = methodName.toLowerCase();
+        if (lowerMethodName.contains("save") || lowerMethodName.contains("create") ||
+                lowerMethodName.contains("add") || lowerMethodName.contains("register") || lowerMethodName.contains("insert")) {
+            return "CREATE";
+        } else if (lowerMethodName.contains("update") || lowerMethodName.contains("modify") ||
+                lowerMethodName.contains("change") || lowerMethodName.contains("edit")) {
+            return "UPDATE";
+        } else if (lowerMethodName.contains("delete") || lowerMethodName.contains("remove")) {
+            return "DELETE";
+        }
+        return methodName.toUpperCase();
+    }
+
+    private String generateDefaultDescription(String className, String methodName, Object[] args) {
+        StringJoiner sj = new StringJoiner(", ", "(", ")");
+        if (args != null) {
+            for (Object arg : args) {
+                if (arg instanceof String || arg instanceof Number || arg instanceof Boolean || arg == null) {
+                    sj.add(String.valueOf(arg));
+                } else {
+                    String argDesc = arg.getClass().getSimpleName();
+                    try {
+                        Method getIdMethod = arg.getClass().getMethod("getId");
+                        Object id = getIdMethod.invoke(arg);
+                        argDesc += "[id=" + id + "]";
+                    } catch (Exception ignored) {
+                    }
+                    sj.add(argDesc);
+                }
+            }
+        }
+        return String.format("Executed method: %s.%s%s", className, methodName, sj.toString());
+    }
+}
