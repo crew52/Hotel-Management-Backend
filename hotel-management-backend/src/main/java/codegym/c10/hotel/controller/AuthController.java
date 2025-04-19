@@ -10,8 +10,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = "*")
 @RestController
@@ -87,5 +94,44 @@ public class AuthController {
         } else {
             return ResponseEntity.badRequest().body(response);
         }
+    }
+
+    /**
+     * Endpoint để lấy thông tin quyền của người dùng hiện tại.
+     * Chỉ trả về thông tin quyền (permissions), không bao gồm roles.
+     * 
+     * @return Danh sách các quyền của người dùng hiện tại
+     */
+    @GetMapping("/permissions")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<Map<String, Object>> getCurrentUserPermissions() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        
+        // Lấy tất cả các quyền (bao gồm cả permissions và roles)
+        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
+        
+        // Tách riêng permissions và roles
+        List<String> permissions = new ArrayList<>();
+        List<String> roles = new ArrayList<>();
+        
+        for (GrantedAuthority authority : authorities) {
+            String authorityName = authority.getAuthority();
+            if (authorityName.startsWith("ROLE_")) {
+                roles.add(authorityName);
+            } else {
+                permissions.add(authorityName);
+            }
+        }
+        
+        Map<String, Object> response = new HashMap<>();
+        response.put("permissions", permissions);
+        response.put("roles", roles);
+        response.put("username", authentication.getName());
+        
+        return ResponseEntity.ok(response);
     }
 }

@@ -1,5 +1,6 @@
 package codegym.c10.hotel.dto.auth;
 
+import codegym.c10.hotel.entity.Permission;
 import codegym.c10.hotel.entity.Role;
 import codegym.c10.hotel.entity.User;
 import org.springframework.security.core.GrantedAuthority;
@@ -48,7 +49,17 @@ public class UserPrinciple implements UserDetails {
             for (Role role : user.getRoles()) {
                 // Đảm bảo role và tên role không null trước khi thêm
                 if (role != null && role.getName() != null) {
+                    // Thêm role name như một authority
                     authoritiesList.add(new SimpleGrantedAuthority(role.getName()));
+                    
+                    // Thêm tất cả permissions của role như các authorities
+                    if (role.getPermissions() != null) {
+                        for (Permission permission : role.getPermissions()) {
+                            if (permission != null && permission.getName() != null) {
+                                authoritiesList.add(new SimpleGrantedAuthority(permission.getName()));
+                            }
+                        }
+                    }
                 } else {
                     // Ghi log hoặc xử lý nếu có role bất thường (ví dụ: role null hoặc tên null trong set)
                     System.err.println("Cảnh báo: Phát hiện Role hoặc Role Name null cho User ID: " + user.getId());

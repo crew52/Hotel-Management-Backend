@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -24,6 +25,7 @@ public class RoomController {
     private IRoomService roomService;
 
     @GetMapping()
+    @PreAuthorize("hasPermission('VIEW_ROOM')")
     public ResponseEntity<Page<Room>> getRooms(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "3") int size
@@ -34,6 +36,7 @@ public class RoomController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasPermission('VIEW_ROOM')")
     public ResponseEntity<Room> getRoomById(@PathVariable Long id) {
         return roomService.findById(id)
                 .map(room -> new ResponseEntity<>(room, HttpStatus.OK))
@@ -41,6 +44,7 @@ public class RoomController {
     }
 
     @GetMapping("/search")
+    @PreAuthorize("hasPermission('VIEW_ROOM')")
     public ResponseEntity<Page<Room>> searchRooms(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) RoomStatus status,
@@ -54,6 +58,7 @@ public class RoomController {
     }
 
     @DeleteMapping("/{id}/delete")
+    @PreAuthorize("hasPermission('DELETE_ROOM')")
     public ResponseEntity<Void> removeRoom(@PathVariable Long id) {
         try {
             roomService.remove(id);
@@ -64,12 +69,14 @@ public class RoomController {
     }
 
     @PostMapping
+    @PreAuthorize("hasPermission('CREATE_ROOM')")
     public ResponseEntity<?> createRoom(@Valid @RequestBody Room room) {
         Room savedRoom = roomService.save(room);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedRoom);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasPermission('UPDATE_ROOM')")
     public ResponseEntity<?> updateRoom(@PathVariable Long id, @Valid @RequestBody Room room) {
         try {
             room.setId(id);
