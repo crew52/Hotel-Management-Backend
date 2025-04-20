@@ -6,6 +6,8 @@ import codegym.c10.hotel.dto.auth.LoginRequest;
 import codegym.c10.hotel.dto.auth.SignupRequest;
 import codegym.c10.hotel.entity.User;
 import codegym.c10.hotel.service.IGenerateService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -28,4 +30,14 @@ public interface IUserService extends IGenerateService<User>, UserDetailsService
      * @return Đối tượng người dùng đã cập nhật
      */
     User update(User user);
+
+    /**
+     * Finds a user by their username.
+     * 
+     * @param username The username to search for
+     * @return The user if found, null otherwise
+     */
+    User findByUsername(String username);
+
+
 }

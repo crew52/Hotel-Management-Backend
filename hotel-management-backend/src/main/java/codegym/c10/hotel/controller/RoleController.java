@@ -21,21 +21,21 @@ public class RoleController {
     private IRoleService roleService;
 
     @PostMapping
-    @PreAuthorize("hasPermission('CREATE_ROLE')")
+    @PreAuthorize("@securityService.hasPermission('CREATE_ROLE')")
     public ResponseEntity<RoleDto> createRole(@Valid @RequestBody RoleDto roleDto) {
         RoleDto createdRole = roleService.createRole(roleDto);
         return new ResponseEntity<>(createdRole, HttpStatus.CREATED);
     }
 
     @GetMapping
-    @PreAuthorize("hasPermission('VIEW_ROLE')")
+    @PreAuthorize("@securityService.hasPermission('VIEW_ROLE')")
     public ResponseEntity<Page<RoleDto>> getAllRoles(Pageable pageable) {
         Page<RoleDto> roles = roleService.findAll(pageable);
         return new ResponseEntity<>(roles, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasPermission('VIEW_ROLE')")
+    @PreAuthorize("@securityService.hasPermission('VIEW_ROLE')")
     public ResponseEntity<RoleDto> getRoleById(@PathVariable Long id) {
         Optional<RoleDto> role = roleService.findById(id);
         return role.map(dto -> new ResponseEntity<>(dto, HttpStatus.OK))
@@ -43,7 +43,7 @@ public class RoleController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasPermission('UPDATE_ROLE')")
+    @PreAuthorize("@securityService.hasPermission('UPDATE_ROLE')")
     public ResponseEntity<RoleDto> updateRole(@PathVariable Long id, @Valid @RequestBody RoleDto roleDto) {
         Optional<RoleDto> updatedRole = roleService.updateRole(id, roleDto);
         return updatedRole.map(dto -> new ResponseEntity<>(dto, HttpStatus.OK))
@@ -51,7 +51,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasPermission('DELETE_ROLE')")
+    @PreAuthorize("@securityService.hasPermission('DELETE_ROLE')")
     public ResponseEntity<Void> deleteRole(@PathVariable Long id) {
         try {
             boolean deleted = roleService.deleteRole(id);
@@ -70,7 +70,7 @@ public class RoleController {
     }
 
     @PostMapping("/{roleId}/permissions/{permissionId}")
-    @PreAuthorize("hasPermission('UPDATE_ROLE')")
+    @PreAuthorize("@securityService.hasPermission('UPDATE_ROLE')")
     public ResponseEntity<Void> addPermissionToRole(@PathVariable Long roleId, @PathVariable Long permissionId) {
         boolean added = roleService.addPermissionToRole(roleId, permissionId);
         if (added) {
@@ -81,7 +81,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/{roleId}/permissions/{permissionId}")
-    @PreAuthorize("hasPermission('UPDATE_ROLE')")
+    @PreAuthorize("@securityService.hasPermission('UPDATE_ROLE')")
     public ResponseEntity<Void> removePermissionFromRole(@PathVariable Long roleId, @PathVariable Long permissionId) {
         boolean removed = roleService.removePermissionFromRole(roleId, permissionId);
         if (removed) {

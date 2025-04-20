@@ -1,15 +1,30 @@
 package codegym.c10.hotel.controller;
 
 import codegym.c10.hotel.dto.ApiResponse;
+import codegym.c10.hotel.dto.RoleDto;
+import codegym.c10.hotel.dto.UserDto;
 import codegym.c10.hotel.dto.UserStatusDto;
+import codegym.c10.hotel.entity.Room;
 import codegym.c10.hotel.entity.User;
 import codegym.c10.hotel.service.user.IUserService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 @RestController
 @RequestMapping("/api/users")
@@ -19,14 +34,40 @@ public class UserController {
 
     private final IUserService userService;
 
+    @GetMapping()
+    @PreAuthorize("@securityService.hasPermission('VIEW_USER')")
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        // Lấy danh sách User
+        Iterable<User> userIterable = userService.findAll();
+        
+        // Chuyển đổi từ User sang UserDto để chỉ trả về các thông tin cần thiết
+        List<UserDto> userDtos = StreamSupport.stream(userIterable.spliterator(), false)
+                .map(this::convertToDto)
+                .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(userDtos);
+    }
+    
     /**
-     * API để khoá/mở khoá tài khoản người dùng
-     * @param id ID của người dùng cần cập nhật trạng thái
-     * @param statusDto Đối tượng chứa trạng thái khoá mới (true/false)
-     * @return Thông báo kết quả cập nhật
+     * Chuyển đổi User entity thành UserDto (chỉ chứa thông tin cần thiết)
      */
+    private UserDto convertToDto(User user) {
+        UserDto dto = new UserDto();
+        dto.setId(user.getId());
+        dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        
+        // Lấy tên các vai trò
+        Set<String> roleNames = user.getRoles().stream()
+                .map(role -> role.getName())
+                .collect(Collectors.toSet());
+        dto.setRoleNames(roleNames);
+        
+        return dto;
+    }
+
     @PutMapping("/{id}/status")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @PreAuthorize("@securityService.hasPermission('UPDATE_USER')")
     public ResponseEntity<?> updateUserStatus(
             @PathVariable Long id,
             @RequestBody UserStatusDto statusDto) {

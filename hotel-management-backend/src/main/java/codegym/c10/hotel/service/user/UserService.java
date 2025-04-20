@@ -1,5 +1,6 @@
 package codegym.c10.hotel.service.user;
 
+import codegym.c10.hotel.dto.UserDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import codegym.c10.hotel.dto.ApiResponse;
@@ -13,6 +14,9 @@ import codegym.c10.hotel.repository.UserRepository;
 import codegym.c10.hotel.security.JwtUtil;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -27,16 +31,16 @@ import java.util.stream.Collectors;
 @Service
 public class UserService implements IUserService {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
-    private final RoleRepository roleRepository; // Sử dụng final và constructor injection
-    private final UserRepository userRepository; // Sử dụng final và constructor injection
-    private final JwtUtil jwtUtil;             // Sử dụng final và constructor injection
-    private final PasswordEncoder passwordEncoder; // Sử dụng final và constructor injection
+    private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
+    private final JwtUtil jwtUtil;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired // Có thể cần hoặc không tùy phiên bản Spring, nhưng nên có để rõ ràng
+    @Autowired
     public UserService(RoleRepository roleRepository,
                        UserRepository userRepository,
                        JwtUtil jwtUtil,
-                       PasswordEncoder passwordEncoder) {
+                       @Lazy PasswordEncoder passwordEncoder) {
         this.roleRepository = roleRepository;
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
@@ -140,6 +144,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
         // *** CỰC KỲ QUAN TRỌNG: PHẢI TRIỂN KHAI ĐÚNG PHƯƠNG THỨC NÀY ***
         User user = userRepository.findByUsername(usernameOrEmail);
@@ -215,4 +220,12 @@ public class UserService implements IUserService {
         userRepository.save(user);
         return new ApiResponse(true, "Đổi mật khẩu thành công");
     }
+
+    @Override
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+
+
+
 }
