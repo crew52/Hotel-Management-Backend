@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -22,6 +23,7 @@ public class EmployeeController {
     private final IEmployeeService employeeService;
 
     @GetMapping
+    @PreAuthorize("@securityService.hasPermission('VIEW_EMPLOYEE')")
     public ResponseEntity<Page<EmployeeDto>> getAllEmployees(
             @RequestParam(required = false) String department,
             @RequestParam(required = false) String position,
@@ -35,6 +37,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@securityService.hasPermission('VIEW_EMPLOYEE')")
     public ResponseEntity<?> getEmployeeById(@PathVariable Long id) {
         try {
             EmployeeDto employeeDto = employeeService.findEmployeeDtoById(id);
@@ -46,6 +49,7 @@ public class EmployeeController {
     }
 
     @PostMapping
+    @PreAuthorize("@securityService.hasPermission('CREATE_EMPLOYEE')")
     public ResponseEntity<?> createEmployee(@Valid @RequestBody EmployeeDto employeeDto) {
         try {
             EmployeeDto savedEmployeeDto = employeeService.createEmployee(employeeDto);
@@ -64,6 +68,7 @@ public class EmployeeController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("@securityService.hasPermission('UPDATE_EMPLOYEE')")
     public ResponseEntity<?> updateEmployee(
             @PathVariable Long id,
             @Valid @RequestBody EmployeeDto employeeDto) {
@@ -83,6 +88,7 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("@securityService.hasPermission('DELETE_EMPLOYEE')")
     public ResponseEntity<?> deleteEmployee(@PathVariable Long id) {
         try {
             employeeService.remove(id);

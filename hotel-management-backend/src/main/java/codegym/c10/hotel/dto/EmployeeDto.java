@@ -1,5 +1,6 @@
 package codegym.c10.hotel.dto;
 
+import codegym.c10.hotel.annotation.ValidUserIdForEmployee;
 import codegym.c10.hotel.eNum.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +17,7 @@ public class EmployeeDto {
     private Long id;
 
     @NotNull(message = "User ID is required")
+    @ValidUserIdForEmployee
     private Long userId;
 
     @NotBlank(message = "Full name must not be blank")

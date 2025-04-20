@@ -8,6 +8,9 @@ public final class PermissionConstants {
     // Prevent instantiation
     private PermissionConstants() {}
     
+    // System admin - has all permissions
+    public static final String SYSTEM_ADMIN = "SYSTEM_ADMIN";
+    
     // Room permissions
     public static final String CREATE_ROOM = "CREATE_ROOM";
     public static final String VIEW_ROOM = "VIEW_ROOM";
@@ -51,5 +54,4 @@ public final class PermissionConstants {
     
     // System admin permissions
     public static final String VIEW_ACTIVITY_LOG = "VIEW_ACTIVITY_LOG";
-    public static final String SYSTEM_ADMIN = "SYSTEM_ADMIN"; // Super admin permission
 } 

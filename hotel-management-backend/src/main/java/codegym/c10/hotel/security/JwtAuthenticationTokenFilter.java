@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -31,24 +32,39 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
 
     @Autowired
-    private IUserService userService;
+    private ApplicationContext applicationContext;
     
     @Autowired
     private ObjectMapper objectMapper;
+
+    // Sử dụng lazy loading để tránh circular dependency
+    private IUserService getUserService() {
+        return applicationContext.getBean(IUserService.class);
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
         try {
+            String requestURI = request.getRequestURI();
+            logger.debug("Processing request: {}", requestURI);
+            
+            // Kiểm tra token JWT
             String jwt = getJwtFromRequest(request);
             if (jwt != null) {
                 try {
                     String username = jwtUtil.extractUsername(jwt);
+                    logger.debug("Extracted username from JWT: {}", username);
+                    
                     if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                        UserDetails userDetails = userService.loadUserByUsername(username);
+                        // Tải thông tin người dùng từ username trong token
+                        UserDetails userDetails = getUserService().loadUserByUsername(username);
+                        logger.debug("Loaded UserDetails with authorities: {}", userDetails.getAuthorities());
 
+                        // Kiểm tra token có hợp lệ không
                         if (jwtUtil.validateToken(jwt, userDetails)) {
+                            // Tạo authentication object
                             UsernamePasswordAuthenticationToken authentication =
                                     new UsernamePasswordAuthenticationToken(
                                             userDetails,
@@ -57,7 +73,12 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                                     );
 
                             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                            
+                            // Thiết lập authentication trong SecurityContext
                             SecurityContextHolder.getContext().setAuthentication(authentication);
+                            logger.debug("Successfully set authentication in SecurityContext");
+                        } else {
+                            logger.warn("JWT token validation failed for user: {}", username);
                         }
                     }
                 } catch (ExpiredJwtException e) {
@@ -65,10 +86,14 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
                     handleExpiredJwtException(response, e);
                     return;
                 }
+            } else {
+                logger.debug("No JWT token found in request");
             }
+            
+            // Tiếp tục chuỗi filter
             filterChain.doFilter(request, response);
         } catch (Exception e) {
-            logger.error("Cannot set user authentication: {}", e.getMessage());
+            logger.error("Cannot set user authentication: {}", e.getMessage(), e);
             filterChain.doFilter(request, response);
         }
     }
@@ -89,8 +114,10 @@ public class JwtAuthenticationTokenFilter extends OncePerRequestFilter {
     private String getJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            logger.debug("Found Bearer token in Authorization header");
             return bearerToken.substring(7);
         }
+        logger.debug("No Bearer token found in Authorization header");
         return null;
     }
 }

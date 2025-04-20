@@ -150,7 +150,7 @@ public class EmployeeService implements IEmployeeService {
 
     @Override
     public EmployeeDto createEmployee(EmployeeDto employeeDto) {
-        // Validate
+        // Validate số điện thoại và CMND độc nhất
         if (employeeDto.getPhone() != null && existsByPhone(employeeDto.getPhone())) {
             throw new IllegalArgumentException("Phone number already exists");
         }
@@ -158,6 +158,9 @@ public class EmployeeService implements IEmployeeService {
         if (employeeDto.getIdCard() != null && existsByIdCard(employeeDto.getIdCard())) {
             throw new IllegalArgumentException("ID card already exists");
         }
+
+        // Validate user_id
+        validateUserIdForCreate(employeeDto.getUserId());
 
         // Convert to entity
         Employee employee = employeeMapperService.convertToEntity(employeeDto);
@@ -186,6 +189,12 @@ public class EmployeeService implements IEmployeeService {
             throw new IllegalArgumentException("ID card already exists");
         }
 
+        // Validate user_id (nếu đang thay đổi user_id)
+        if (employeeDto.getUserId() != null && 
+                !employeeDto.getUserId().equals(existingEmployee.getUser().getId())) {
+            validateUserIdForUpdate(employeeDto.getUserId(), id);
+        }
+
         // Set ID
         employeeDto.setId(id);
 
@@ -197,5 +206,37 @@ public class EmployeeService implements IEmployeeService {
 
         // Convert back to DTO
         return employeeMapperService.convertToDto(updatedEmployee);
+    }
+    
+    /**
+     * Kiểm tra user_id khi tạo mới nhân viên
+     */
+    private void validateUserIdForCreate(Long userId) {
+        // Kiểm tra user có tồn tại không
+        if (!userRepository.existsById(userId)) {
+            throw new EntityNotFoundException("User not found with id: " + userId);
+        }
+        
+        // Kiểm tra user đã được liên kết với nhân viên nào khác chưa
+        Optional<Employee> existingEmployee = employeeRepository.findByUserId(userId);
+        if (existingEmployee.isPresent()) {
+            throw new IllegalArgumentException("User is already linked to another employee");
+        }
+    }
+    
+    /**
+     * Kiểm tra user_id khi cập nhật nhân viên
+     */
+    private void validateUserIdForUpdate(Long userId, Long employeeId) {
+        // Kiểm tra user có tồn tại không
+        if (!userRepository.existsById(userId)) {
+            throw new EntityNotFoundException("User not found with id: " + userId);
+        }
+        
+        // Kiểm tra user đã được liên kết với nhân viên nào khác chưa
+        Optional<Employee> existingEmployee = employeeRepository.findByUserId(userId);
+        if (existingEmployee.isPresent() && !existingEmployee.get().getId().equals(employeeId)) {
+            throw new IllegalArgumentException("User is already linked to another employee");
+        }
     }
 }
