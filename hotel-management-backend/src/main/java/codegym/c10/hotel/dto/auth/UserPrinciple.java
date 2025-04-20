@@ -1,5 +1,6 @@
 package codegym.c10.hotel.dto.auth;
 
+import codegym.c10.hotel.entity.Permission;
 import codegym.c10.hotel.entity.Role;
 import codegym.c10.hotel.entity.User;
 import org.springframework.security.core.GrantedAuthority;
@@ -44,32 +45,48 @@ public class UserPrinciple implements UserDetails {
     public static UserPrinciple build(User user) {
         // 1. Lấy danh sách quyền từ roles
         List<GrantedAuthority> authoritiesList = new ArrayList<>();
+        
+        // Đảm bảo thêm vai trò trước
         if (user.getRoles() != null) {
             for (Role role : user.getRoles()) {
-                // Đảm bảo role và tên role không null trước khi thêm
                 if (role != null && role.getName() != null) {
+                    // Thêm role name như một authority
                     authoritiesList.add(new SimpleGrantedAuthority(role.getName()));
+                    
+                    // Thêm tất cả permissions của role như các authorities
+                    try {
+                        if (role.getPermissions() != null) {
+                            for (Permission permission : role.getPermissions()) {
+                                if (permission != null && permission.getName() != null) {
+                                    authoritiesList.add(new SimpleGrantedAuthority(permission.getName()));
+                                    System.out.println("Added permission: " + permission.getName());
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        System.err.println("Cannot access permissions in role " + role.getName() + ": " + e.getMessage());
+                    }
                 } else {
-                    // Ghi log hoặc xử lý nếu có role bất thường (ví dụ: role null hoặc tên null trong set)
-                    System.err.println("Cảnh báo: Phát hiện Role hoặc Role Name null cho User ID: " + user.getId());
+                    System.err.println("Warning: Detected null Role or Role Name for User ID: " + user.getId());
                 }
             }
         }
-
-        // 2. Lấy trạng thái isLocked và isDeleted từ User entity
-        // Xử lý trường hợp giá trị Boolean có thể là null từ DB
-        // Mặc định: không khóa (false), không xóa (false) nếu giá trị là null
+        
+        // Log tất cả các quyền để debug
+        System.out.println("User: " + user.getUsername() + " has authorities: " + authoritiesList);
+        
+        // 2. Lấy trạng thái
         boolean locked = user.getIsLocked() != null && user.getIsLocked();
-        boolean deleted = user.getDeleted() != null && user.getDeleted(); // Giả định getDeleted() đã hoạt động
+        boolean deleted = user.getDeleted() != null && user.getDeleted();
 
         // 3. Tạo và trả về đối tượng UserPrinciple
         return new UserPrinciple(
                 user.getId(),
                 user.getUsername(),
-                user.getPasswordHash(), // Lấy password hash
+                user.getPasswordHash(),
                 authoritiesList,
-                locked,      // Trạng thái khóa thực tế
-                deleted      // Trạng thái xóa thực tế
+                locked,
+                deleted
         );
     }
 

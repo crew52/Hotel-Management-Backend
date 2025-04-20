@@ -14,6 +14,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,6 +37,7 @@ public class RoomCategoryController {
     }
 
     @GetMapping()
+    @PreAuthorize("@securityService.hasPermission('VIEW_ROOM_CATEGORY')")
     public ResponseEntity<Iterable<RoomCategory>> findAllRoomCategories() {
         List<RoomCategory> roomCategories = (List<RoomCategory>) roomCategoryService.findAll();
         if (roomCategories.isEmpty()) {
@@ -45,6 +47,7 @@ public class RoomCategoryController {
     }
 
     @GetMapping("/search")
+    @PreAuthorize("@securityService.hasPermission('VIEW_ROOM_CATEGORY')")
     public ResponseEntity<Page<RoomCategory>> searchRoomCategories(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) RoomCategoryStatus status,
@@ -65,6 +68,7 @@ public class RoomCategoryController {
     }
 
     @DeleteMapping("/{id}/delete")
+    @PreAuthorize("@securityService.hasPermission('DELETE_ROOM_CATEGORY')")
     public ResponseEntity<Void> removeRoomCategory(@PathVariable Long id) {
         try {
             roomCategoryService.remove(id);
@@ -75,6 +79,7 @@ public class RoomCategoryController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("@securityService.hasPermission('VIEW_ROOM_CATEGORY')")
     public ResponseEntity<RoomCategory> getRoomCategoryById(@PathVariable Long id) {
         return roomCategoryService.findById(id)
                 .map(roomCategory -> new ResponseEntity<>(roomCategory, HttpStatus.OK))
@@ -82,12 +87,14 @@ public class RoomCategoryController {
     }
 
     @PostMapping
+    @PreAuthorize("@securityService.hasPermission('CREATE_ROOM_CATEGORY')")
     public ResponseEntity<?> createRoomCategory(@Valid @RequestBody RoomCategory roomCategory,
                                                 BindingResult bindingResult) {
         return roomCategoryHandler.createRoomCategory(roomCategory, bindingResult);
     }
 
     @PutMapping("/{id}/edit")
+    @PreAuthorize("@securityService.hasPermission('UPDATE_ROOM_CATEGORY')")
     public ResponseEntity<?> updateRoomCategory(@PathVariable Long id,
                                                 @Valid @RequestBody RoomCategory roomCategory,
                                                 BindingResult bindingResult) {

@@ -27,7 +27,7 @@ public class Role extends BaseEntity {
     private Set<User> users;
 
     @NotEmpty(message = "At least one permission must be assigned to the role")
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "role_permissions",
             joinColumns = @JoinColumn(name = "role_id"),
