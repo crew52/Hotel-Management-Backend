@@ -53,17 +53,17 @@ public class Room extends BaseEntity {
 
     @Size(max = 255, message = "Image path must be less than 255 characters")
     @Column(name = "img_1")
-    private String img1;
+    private String img1 = "";
 
     @Size(max = 255, message = "Image path must be less than 255 characters")
     @Column(name = "img_2")
-    private String img2;
+    private String img2 = "";
 
     @Size(max = 255, message = "Image path must be less than 255 characters")
     @Column(name = "img_3")
-    private String img3;
+    private String img3 = "";
 
     @Size(max = 255, message = "Image path must be less than 255 characters")
     @Column(name = "img_4")
-    private String img4;
+    private String img4 = "";
 }

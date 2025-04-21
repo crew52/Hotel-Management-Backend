@@ -5,6 +5,9 @@ import codegym.c10.hotel.entity.RoomCategory;
 import codegym.c10.hotel.exception.ErrorResponse;
 import codegym.c10.hotel.exception.RoomCategoryHandler;
 import codegym.c10.hotel.service.IRoomCategoryService;
+import codegym.c10.hotel.service.uploadFile.StorageService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +16,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +37,7 @@ public class RoomCategoryController {
 
     private final RoomCategoryHandler roomCategoryHandler;
 
-    public RoomCategoryController(RoomCategoryHandler roomCategoryFacade) {
+    public RoomCategoryController(StorageService storageService, RoomCategoryHandler roomCategoryFacade) {
         this.roomCategoryHandler = roomCategoryFacade;
     }
 
@@ -86,18 +91,47 @@ public class RoomCategoryController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('CREATE_ROOM_CATEGORY')")
-    public ResponseEntity<?> createRoomCategory(@Valid @RequestBody RoomCategory roomCategory,
-                                                BindingResult bindingResult) {
-        return roomCategoryHandler.createRoomCategory(roomCategory, bindingResult);
+    public ResponseEntity<?> createRoomCategory(@RequestPart("roomCategory") String roomCategoryJson,
+                                                BindingResult bindingResult,
+                                                @RequestPart(value = "img", required = false) MultipartFile img) {
+        RoomCategory roomCategory;
+        try {
+            roomCategory = new ObjectMapper().readValue(roomCategoryJson, RoomCategory.class);
+        } catch (JsonProcessingException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("roomCategory", "Invalid JSON format or value");
+            return ResponseEntity.badRequest().body(new ErrorResponse("Invalid value provided", error));
+        }
+
+        return roomCategoryHandler.createRoomCategory(roomCategory, bindingResult, img);
     }
 
-    @PutMapping("/{id}/edit")
+//    @PutMapping("/{id}/edit")
+//    @PreAuthorize("@securityService.hasPermission('UPDATE_ROOM_CATEGORY')")
+//    public ResponseEntity<?> updateRoomCategory(@PathVariable Long id,
+//                                                @Valid @RequestBody RoomCategory roomCategory,
+//                                                BindingResult bindingResult) {
+//        return roomCategoryHandler.updateRoomCategory(id, roomCategory, bindingResult);
+//    }
+
+    @PutMapping(value = "/{id}/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('UPDATE_ROOM_CATEGORY')")
     public ResponseEntity<?> updateRoomCategory(@PathVariable Long id,
-                                                @Valid @RequestBody RoomCategory roomCategory,
-                                                BindingResult bindingResult) {
-        return roomCategoryHandler.updateRoomCategory(id, roomCategory, bindingResult);
+                                                @RequestPart("roomCategory") String roomCategoryJson,
+                                                BindingResult bindingResult,
+                                                @RequestPart(value = "img", required = false) MultipartFile img) {
+        RoomCategory roomCategory;
+        try {
+            roomCategory = new ObjectMapper().readValue(roomCategoryJson, RoomCategory.class);
+        } catch (JsonProcessingException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("roomCategory", "Invalid JSON format or value");
+            return ResponseEntity.badRequest().body(new ErrorResponse("Invalid value provided", error));
+        }
+
+        return roomCategoryHandler.updateRoomCategory(id, roomCategory, bindingResult, img);
     }
+
 }

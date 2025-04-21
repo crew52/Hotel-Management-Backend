@@ -164,36 +164,68 @@ CREATE TABLE role_permissions (
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
-// trigger
-DELIMITER $$
 
-CREATE TRIGGER trg_after_update_room
-AFTER UPDATE ON Rooms
-FOR EACH ROW
-BEGIN
-    -- Kiểm tra xem có thay đổi dữ liệu không
-    IF NOT (
-        OLD.floor <=> NEW.floor AND
-        OLD.start_date <=> NEW.start_date AND
-        OLD.status <=> NEW.status AND
-        OLD.note <=> NEW.note AND
-        OLD.is_clean <=> NEW.is_clean AND
-        OLD.check_in_duration <=> NEW.check_in_duration AND
-        OLD.img_1 <=> NEW.img_1 AND
-        OLD.img_2 <=> NEW.img_2 AND
-        OLD.img_3 <=> NEW.img_3 AND
-        OLD.img_4 <=> NEW.img_4
-    ) THEN
-        INSERT INTO activity_logs (
-            user_id,
-            action,
-            description
-        ) VALUES (
-            @current_user_id,
-            'UPDATE_ROOM',
-            CONCAT('Room ID ', NEW.id, ' has been updated.')
-        );
-    END IF;
-END$$
 
-DELIMITER ;
+CREATE TABLE Booking (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    customer_name VARCHAR(100),
+    customer_phone VARCHAR(20),
+    customer_note TEXT,
+    total_amount DECIMAL(10, 2) DEFAULT 0.00,
+    paid_amount DECIMAL(10, 2) DEFAULT 0.00,
+    booking_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    checkin_time DATETIME,
+    checkout_time DATETIME,
+    booking_status ENUM('PENDING', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED') DEFAULT 'PENDING',
+    created_by BIGINT, -- nhân viên thao tác
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted BOOLEAN DEFAULT FALSE,
+
+    CONSTRAINT fk_booking_creator
+        FOREIGN KEY (created_by) REFERENCES Users(id)
+        ON DELETE SET NULL
+        ON UPDATE CASCADE
+);
+
+CREATE TABLE Booking_Details (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    booking_id BIGINT NOT NULL,
+    room_id BIGINT NOT NULL,
+    checkin_time DATETIME NOT NULL,
+    checkout_time DATETIME NOT NULL,
+    rent_type ENUM('HOURLY', 'DAILY', 'OVERNIGHT') DEFAULT 'HOURLY',
+    duration INT DEFAULT 1, -- số giờ/ngày/đêm
+    price DECIMAL(10, 2) NOT NULL,
+    status ENUM('BOOKED', 'IN_USE', 'COMPLETED', 'CANCELLED') DEFAULT 'BOOKED',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    deleted BOOLEAN DEFAULT FALSE,
+
+    CONSTRAINT fk_booking_room
+        FOREIGN KEY (room_id) REFERENCES Rooms(id)
+        ON DELETE RESTRICT
+        ON UPDATE CASCADE,
+
+    CONSTRAINT fk_booking_main
+        FOREIGN KEY (booking_id) REFERENCES Booking(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
+CREATE TABLE Payment_Transactions (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    booking_id BIGINT NOT NULL,
+    amount DECIMAL(10, 2) NOT NULL,
+    payment_method ENUM('CASH', 'CARD', 'BANK_TRANSFER', 'MOMO', 'ZALO_PAY') DEFAULT 'CASH',
+    transaction_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    note TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_payment_booking
+        FOREIGN KEY (booking_id) REFERENCES Booking(id)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
