@@ -38,10 +38,8 @@ public class RoomController {
 
     @GetMapping()
     @PreAuthorize("@securityService.hasPermission('VIEW_ROOM')")
-    public ResponseEntity<Page<Room>> getRooms(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "3") int size
-    ) {
+    public ResponseEntity<Page<Room>> getRooms(@RequestParam(defaultValue = "0") int page,
+                                               @RequestParam(defaultValue = "3") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Page<Room> rooms = roomService.findAllByDeletedFalse(pageable);
         return ResponseEntity.ok(rooms);
@@ -51,19 +49,17 @@ public class RoomController {
     @PreAuthorize("@securityService.hasPermission('VIEW_ROOM')")
     public ResponseEntity<Room> getRoomById(@PathVariable Long id) {
         return roomService.findById(id)
-                .map(room -> new ResponseEntity<>(room, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+                .map(room -> ResponseEntity.ok(room))
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping("/search")
     @PreAuthorize("@securityService.hasPermission('VIEW_ROOM')")
-    public ResponseEntity<Page<Room>> searchRooms(
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) RoomStatus status,
-            @RequestParam(required = false) Integer floor,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
+    public ResponseEntity<Page<Room>> searchRooms(@RequestParam(required = false) String keyword,
+                                                  @RequestParam(required = false) RoomStatus status,
+                                                  @RequestParam(required = false) Integer floor,
+                                                  @RequestParam(defaultValue = "0") int page,
+                                                  @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
         Page<Room> rooms = roomService.advancedSearch(keyword, status, floor, pageable);
         return ResponseEntity.ok(rooms);
@@ -74,86 +70,53 @@ public class RoomController {
     public ResponseEntity<Void> removeRoom(@PathVariable Long id) {
         try {
             roomService.remove(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            return ResponseEntity.noContent().build();
         } catch (EntityNotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.notFound().build();
         }
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('CREATE_ROOM')")
-    public ResponseEntity<?> createRoom(
-            @RequestPart("room") String roomJson,
-            @RequestPart(value = "img1", required = false) MultipartFile img1,
-            @RequestPart(value = "img2", required = false) MultipartFile img2,
-            @RequestPart(value = "img3", required = false) MultipartFile img3,
-            @RequestPart(value = "img4", required = false) MultipartFile img4) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Room room;
-        try {
-            ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-            room = mapper.readValue(roomJson, Room.class);
-        } catch (JsonProcessingException e) {
+    public ResponseEntity<?> createRoom(@RequestPart("room") String roomJson,
+                                        @RequestPart(value = "img1", required = false) MultipartFile img1,
+                                        @RequestPart(value = "img2", required = false) MultipartFile img2,
+                                        @RequestPart(value = "img3", required = false) MultipartFile img3,
+                                        @RequestPart(value = "img4", required = false) MultipartFile img4) {
+        Room room = parseRoomJson(roomJson);
+        if (room == null) {
             return ResponseEntity.badRequest().body(new ErrorResponse("Invalid value provided",
                     Collections.singletonMap("room", "Invalid JSON format or value")));
         }
 
-        // Save images
-        MultipartFile[] images = {img1, img2, img3, img4};
-        for (int i = 0; i < images.length; i++) {
-            if (images[i] != null && !images[i].isEmpty()) {
-                String path = storageService.storeWithUUID(images[i], "rooms");
-                room.getClass().getMethod("setImg" + (i + 1), String.class).invoke(room, path);
-            }
+        try {
+            handleRoomImages(room, new MultipartFile[]{img1, img2, img3, img4});
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error processing images: " + e.getMessage());
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(roomService.save(room));
+        Room savedRoom = roomService.save(room);
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedRoom);
     }
-
-//    @PutMapping("/{id}")
-//    @PreAuthorize("@securityService.hasPermission('UPDATE_ROOM')")
-//    public ResponseEntity<?> updateRoom(@PathVariable Long id, @Valid @RequestBody Room room) {
-//        try {
-//            room.setId(id);
-//            Room updatedRoom = roomService.update(room);
-//            return ResponseEntity.ok(updatedRoom);
-//        } catch (EntityNotFoundException e) {
-//            return ResponseEntity.notFound().build();
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body("Error updating room: " + e.getMessage());
-//        }
-//    }
 
     @PutMapping(value = "/{id}/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('UPDATE_ROOM')")
-    public ResponseEntity<?> updateRoom(
-            @PathVariable Long id,
-            @RequestPart("room") String roomJson,
-            @RequestPart(value = "img1", required = false) MultipartFile img1,
-            @RequestPart(value = "img2", required = false) MultipartFile img2,
-            @RequestPart(value = "img3", required = false) MultipartFile img3,
-            @RequestPart(value = "img4", required = false) MultipartFile img4
-    ) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Room room;
-        try {
-            ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-            room = mapper.readValue(roomJson, Room.class);
-            room.setId(id); // Gán ID vào Room
-        } catch (JsonProcessingException e) {
+    public ResponseEntity<?> updateRoom(@PathVariable Long id,
+                                        @RequestPart("room") String roomJson,
+                                        @RequestPart(value = "img1", required = false) MultipartFile img1,
+                                        @RequestPart(value = "img2", required = false) MultipartFile img2,
+                                        @RequestPart(value = "img3", required = false) MultipartFile img3,
+                                        @RequestPart(value = "img4", required = false) MultipartFile img4) {
+        Room room = parseRoomJson(roomJson);
+        if (room == null) {
             return ResponseEntity.badRequest().body(new ErrorResponse("Invalid value provided",
                     Collections.singletonMap("room", "Invalid JSON format or value")));
         }
-
-        // Xử lý lưu ảnh mới (nếu có)
-        MultipartFile[] images = {img1, img2, img3, img4};
-        for (int i = 0; i < images.length; i++) {
-            if (images[i] != null && !images[i].isEmpty()) {
-                String path = storageService.storeWithUUID(images[i], "rooms");
-                room.getClass().getMethod("setImg" + (i + 1), String.class).invoke(room, path);
-            }
-        }
+        room.setId(id);
 
         try {
+            handleRoomImages(room, new MultipartFile[]{img1, img2, img3, img4});
             Room updatedRoom = roomService.update(room);
             return ResponseEntity.ok(updatedRoom);
         } catch (EntityNotFoundException e) {
@@ -164,4 +127,23 @@ public class RoomController {
         }
     }
 
+    // Phương thức hỗ trợ chuyển đổi JSON thành Room
+    private Room parseRoomJson(String roomJson) {
+        try {
+            ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+            return mapper.readValue(roomJson, Room.class);
+        } catch (JsonProcessingException e) {
+            return null;
+        }
+    }
+
+    // Phương thức xử lý ảnh chung cho cả create và update
+    private void handleRoomImages(Room room, MultipartFile[] images) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        for (int i = 0; i < images.length; i++) {
+            if (images[i] != null && !images[i].isEmpty()) {
+                String path = storageService.storeWithUUID(images[i], "rooms");
+                room.getClass().getMethod("setImg" + (i + 1), String.class).invoke(room, path);
+            }
+        }
+    }
 }
