@@ -76,4 +76,14 @@ public class FileSystemStorageService implements StorageService {
         return subFolder + "/" + uniqueFilename;
     }
 
+    @Override
+    public void deleteFile(String fileName) {
+        try {
+            Path file = rootLocation.resolve(fileName);
+            Files.deleteIfExists(file);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to delete file: " + fileName, e);
+        }
+    }
+
 }

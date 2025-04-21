@@ -8,4 +8,6 @@ public interface StorageService {
     String store(MultipartFile file);
 
     String storeWithUUID(MultipartFile file, String subFolder);
+
+    void deleteFile(String fileName);
 }
