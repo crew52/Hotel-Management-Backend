@@ -2,7 +2,6 @@ package codegym.c10.hotel.controller;
 
 import codegym.c10.hotel.eNum.RoomStatus;
 import codegym.c10.hotel.entity.Room;
-import codegym.c10.hotel.entity.RoomCategory;
 import codegym.c10.hotel.exception.ErrorResponse;
 import codegym.c10.hotel.service.IRoomService;
 import codegym.c10.hotel.service.uploadFile.StorageService;
@@ -23,8 +22,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/api/rooms")
@@ -81,70 +80,33 @@ public class RoomController {
         }
     }
 
-//    @PostMapping
-//    @PreAuthorize("@securityService.hasPermission('CREATE_ROOM')")
-//    public ResponseEntity<?> createRoom(@Valid @RequestBody Room room) {
-//        Room savedRoom = roomService.save(room);
-//        return ResponseEntity.status(HttpStatus.CREATED).body(savedRoom);
-//    }
-
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('CREATE_ROOM')")
     public ResponseEntity<?> createRoom(
-            @RequestPart(value = "room") String roomJson,
+            @RequestPart("room") String roomJson,
             @RequestPart(value = "img1", required = false) MultipartFile img1,
             @RequestPart(value = "img2", required = false) MultipartFile img2,
             @RequestPart(value = "img3", required = false) MultipartFile img3,
-            @RequestPart(value = "img4", required = false) MultipartFile img4
-    ) {
+            @RequestPart(value = "img4", required = false) MultipartFile img4) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         Room room;
         try {
-            // convert roomJSON to string: {
-            //  "roomCategory": { "id": 1 },
-            //  "floor": 2,
-            //  "startDate": "2023-12-01",
-            //  "status": "AVAILABLE",
-            //  "note": "Near elevator",
-            //  "isClean": true,
-            //  "checkInDuration": 2
-//            }
-//             roomJson = roomJson.replaceAll("\\s+", "");
-//             roomJson = roomJson.replaceAll(":", ": ");
-//             roomJson = roomJson.replaceAll(",", ", ");
-//             roomJson = roomJson.replaceAll("\\{", "{ ");
-//             roomJson = roomJson.replaceAll("\\}", "} ");
-//             System.out.println(roomJson);
-             ObjectMapper objectMapper = new ObjectMapper();
-            // Java 8 date/time type `java.time.LocalDate` not supported by default: add Module "com.fasterxml.jackson.datatype:jackson-datatype-jsr310" to enable handling
-             objectMapper.registerModule(new JavaTimeModule());
-            room = objectMapper.readValue(roomJson, Room.class);
+            ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+            room = mapper.readValue(roomJson, Room.class);
         } catch (JsonProcessingException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("room", "Invalid JSON format or value");
-            return ResponseEntity.badRequest().body(new ErrorResponse("Invalid value provided", error));
+            return ResponseEntity.badRequest().body(new ErrorResponse("Invalid value provided",
+                    Collections.singletonMap("room", "Invalid JSON format or value")));
         }
 
-        // Lưu ảnh
-        if (img1 != null && !img1.isEmpty()) {
-            String path = storageService.storeWithUUID(img1, "rooms");
-            room.setImg1(path);
-        }
-        if (img2 != null && !img2.isEmpty()) {
-            String path = storageService.storeWithUUID(img2, "rooms");
-            room.setImg2(path);
-        }
-        if (img3 != null && !img3.isEmpty()) {
-            String path = storageService.storeWithUUID(img3, "rooms");
-            room.setImg3(path);
-        }
-        if (img4 != null && !img4.isEmpty()) {
-            String path = storageService.storeWithUUID(img4, "rooms");
-            room.setImg4(path);
+        // Save images
+        MultipartFile[] images = {img1, img2, img3, img4};
+        for (int i = 0; i < images.length; i++) {
+            if (images[i] != null && !images[i].isEmpty()) {
+                String path = storageService.storeWithUUID(images[i], "rooms");
+                room.getClass().getMethod("setImg" + (i + 1), String.class).invoke(room, path);
+            }
         }
 
-
-        Room savedRoom = roomService.save(room);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedRoom);
+        return ResponseEntity.status(HttpStatus.CREATED).body(roomService.save(room));
     }
 
     @PutMapping("/{id}")
