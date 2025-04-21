@@ -5,6 +5,9 @@ import codegym.c10.hotel.entity.RoomCategory;
 import codegym.c10.hotel.exception.ErrorResponse;
 import codegym.c10.hotel.exception.RoomCategoryHandler;
 import codegym.c10.hotel.service.IRoomCategoryService;
+import codegym.c10.hotel.service.uploadFile.StorageService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +16,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -29,10 +34,12 @@ public class RoomCategoryController {
 
     @Autowired
     private IRoomCategoryService roomCategoryService;
+    private final StorageService storageService;
 
     private final RoomCategoryHandler roomCategoryHandler;
 
-    public RoomCategoryController(RoomCategoryHandler roomCategoryFacade) {
+    public RoomCategoryController(StorageService storageService, RoomCategoryHandler roomCategoryFacade) {
+        this.storageService = storageService;
         this.roomCategoryHandler = roomCategoryFacade;
     }
 
@@ -90,6 +97,22 @@ public class RoomCategoryController {
     @PreAuthorize("@securityService.hasPermission('CREATE_ROOM_CATEGORY')")
     public ResponseEntity<?> createRoomCategory(@Valid @RequestBody RoomCategory roomCategory,
                                                 BindingResult bindingResult) {
+        return roomCategoryHandler.createRoomCategory(roomCategory, bindingResult);
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("@securityService.hasPermission('CREATE_ROOM_CATEGORY')")
+    public ResponseEntity<?> createRoomCategory(@RequestPart("roomCategory") String roomCategoryJson,
+                                                BindingResult bindingResult,
+                                                @RequestPart(value = "img", required = false) MultipartFile img) throws JsonProcessingException {
+
+        RoomCategory roomCategory = new ObjectMapper().readValue(roomCategoryJson, RoomCategory.class);
+
+        if (img != null && !img.isEmpty()) {
+            String fileName = storageService.storeWithUUID(img);
+            roomCategory.setImgUrl(fileName);
+        }
+
         return roomCategoryHandler.createRoomCategory(roomCategory, bindingResult);
     }
 

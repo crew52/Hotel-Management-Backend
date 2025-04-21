@@ -88,5 +88,5 @@ public class RoomCategory extends BaseEntity {
 
     @Size(max = 255, message = "Image URL must not exceed 255 characters")
     @Column(name = "img_url", length = 255)
-    private String imgUrl;
+    private String imgUrl = "";
 }
