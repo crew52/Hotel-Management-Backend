@@ -2,11 +2,13 @@ package codegym.c10.hotel.exception;
 
 import codegym.c10.hotel.entity.RoomCategory;
 import codegym.c10.hotel.service.IRoomCategoryService;
+import codegym.c10.hotel.service.uploadFile.StorageService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,16 +19,26 @@ public class RoomCategoryHandler {
     @Autowired
     private IRoomCategoryService roomCategoryService;
 
-    public ResponseEntity<?> createRoomCategory(RoomCategory roomCategory, BindingResult bindingResult) {
+    @Autowired
+    private StorageService storageService;
+
+    public ResponseEntity<?> createRoomCategory(RoomCategory roomCategory, BindingResult bindingResult, MultipartFile img) {
         Map<String, String> errors = validate(roomCategory, bindingResult, true);
 
         if (!errors.isEmpty()) {
             return ResponseEntity.badRequest().body(new ErrorResponse("Validation failed", errors));
         }
 
+        // ✅ Chỉ lưu ảnh sau khi validate xong
+        if (img != null && !img.isEmpty()) {
+            String fileName = storageService.storeWithUUID(img, "room-category");
+            roomCategory.setImgUrl(fileName);
+        }
+
         RoomCategory savedCategory = roomCategoryService.save(roomCategory);
         return new ResponseEntity<>(savedCategory, HttpStatus.CREATED);
     }
+
 
     public ResponseEntity<?> updateRoomCategory(Long id, RoomCategory roomCategory, BindingResult bindingResult) {
         Map<String, String> errors = validate(roomCategory, bindingResult, false, id);

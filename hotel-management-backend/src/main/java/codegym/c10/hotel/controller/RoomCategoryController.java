@@ -93,27 +93,32 @@ public class RoomCategoryController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping
-    @PreAuthorize("@securityService.hasPermission('CREATE_ROOM_CATEGORY')")
-    public ResponseEntity<?> createRoomCategory(@Valid @RequestBody RoomCategory roomCategory,
-                                                BindingResult bindingResult) {
-        return roomCategoryHandler.createRoomCategory(roomCategory, bindingResult);
-    }
+//    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    @PreAuthorize("@securityService.hasPermission('CREATE_ROOM_CATEGORY')")
+//    public ResponseEntity<?> createRoomCategory(@RequestPart("roomCategory") String roomCategoryJson,
+//                                                BindingResult bindingResult,
+//                                                @RequestPart(value = "img", required = false) MultipartFile img) throws JsonProcessingException {
+//
+//        RoomCategory roomCategory = new ObjectMapper().readValue(roomCategoryJson, RoomCategory.class);
+//
+//        return roomCategoryHandler.createRoomCategory(roomCategory, bindingResult, img);
+//    }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('CREATE_ROOM_CATEGORY')")
     public ResponseEntity<?> createRoomCategory(@RequestPart("roomCategory") String roomCategoryJson,
                                                 BindingResult bindingResult,
-                                                @RequestPart(value = "img", required = false) MultipartFile img) throws JsonProcessingException {
-
-        RoomCategory roomCategory = new ObjectMapper().readValue(roomCategoryJson, RoomCategory.class);
-
-        if (img != null && !img.isEmpty()) {
-            String fileName = storageService.storeWithUUID(img);
-            roomCategory.setImgUrl(fileName);
+                                                @RequestPart(value = "img", required = false) MultipartFile img) {
+        RoomCategory roomCategory;
+        try {
+            roomCategory = new ObjectMapper().readValue(roomCategoryJson, RoomCategory.class);
+        } catch (JsonProcessingException e) {
+            Map<String, String> error = new HashMap<>();
+            error.put("roomCategory", "Invalid JSON format or value");
+            return ResponseEntity.badRequest().body(new ErrorResponse("Invalid value provided", error));
         }
 
-        return roomCategoryHandler.createRoomCategory(roomCategory, bindingResult);
+        return roomCategoryHandler.createRoomCategory(roomCategory, bindingResult, img);
     }
 
     @PutMapping("/{id}/edit")

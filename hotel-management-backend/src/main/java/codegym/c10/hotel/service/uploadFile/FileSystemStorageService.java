@@ -48,10 +48,19 @@ public class FileSystemStorageService implements StorageService {
     }
 
     @Override
-    public String storeWithUUID(MultipartFile file) {
+    public String storeWithUUID(MultipartFile file, String subFolder) {
         String originalFilename = Path.of(file.getOriginalFilename()).getFileName().toString();
         String uniqueFilename = UUID.randomUUID() + "_" + originalFilename;
-        Path destinationFile = this.rootLocation.resolve(uniqueFilename).normalize().toAbsolutePath();
+
+        // Tạo thư mục con (subFolder) trong rootLocation
+        Path subFolderPath = this.rootLocation.resolve(subFolder).normalize();
+        try {
+            Files.createDirectories(subFolderPath);
+        } catch (IOException e) {
+            throw new RuntimeException("Could not create sub-directory for storage", e);
+        }
+
+        Path destinationFile = subFolderPath.resolve(uniqueFilename).normalize().toAbsolutePath();
 
         if (!destinationFile.startsWith(rootLocation.toAbsolutePath())) {
             throw new RuntimeException("Cannot store file outside of the storage directory.");
@@ -63,6 +72,8 @@ public class FileSystemStorageService implements StorageService {
             throw new RuntimeException("Failed to store file", e);
         }
 
-        return uniqueFilename;
+        // Trả về đường dẫn tương đối để lưu trong DB hoặc hiển thị
+        return subFolder + "/" + uniqueFilename;
     }
+
 }
