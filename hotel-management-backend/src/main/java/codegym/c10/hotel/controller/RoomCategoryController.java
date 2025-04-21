@@ -41,6 +41,15 @@ public class RoomCategoryController {
         this.roomCategoryHandler = roomCategoryFacade;
     }
 
+    /**
+     * Get All Room Categories
+     *
+     * Fetch a list of all room categories.
+     *
+     * @return ResponseEntity<Iterable<RoomCategory>>: A response containing the list of room categories.
+     *          - 200 OK: Returns the list of room categories if available.
+     *          - 204 No Content: If no room categories exist.
+     */
     @GetMapping()
     @PreAuthorize("@securityService.hasPermission('VIEW_ROOM_CATEGORY')")
     public ResponseEntity<Iterable<RoomCategory>> findAllRoomCategories() {
@@ -51,6 +60,24 @@ public class RoomCategoryController {
         return new ResponseEntity<>(roomCategories, HttpStatus.OK);
     }
 
+    /**
+     * Search Room Categories
+     *
+     * Search for room categories based on multiple filters such as keyword, status, and price range.
+     *
+     * @param keyword Optional query parameter to search by name of the room category.
+     * @param status Optional query parameter to filter by room category status.
+     * @param minHourlyPrice Optional query parameter to filter by minimum hourly price.
+     * @param maxHourlyPrice Optional query parameter to filter by maximum hourly price.
+     * @param minDailyPrice Optional query parameter to filter by minimum daily price.
+     * @param maxDailyPrice Optional query parameter to filter by maximum daily price.
+     * @param minOvernightPrice Optional query parameter to filter by minimum overnight price.
+     * @param maxOvernightPrice Optional query parameter to filter by maximum overnight price.
+     * @param page Page number for pagination.
+     * @param size Number of results per page.
+     * @return ResponseEntity<Page<RoomCategory>>: A paginated list of room categories matching the search criteria.
+     *          - 200 OK: Returns a page of room categories matching the search filters.
+     */
     @GetMapping("/search")
     @PreAuthorize("@securityService.hasPermission('VIEW_ROOM_CATEGORY')")
     public ResponseEntity<Page<RoomCategory>> searchRoomCategories(
@@ -72,6 +99,16 @@ public class RoomCategoryController {
         return ResponseEntity.ok(categories);
     }
 
+    /**
+     * Delete Room Category
+     *
+     * Delete a specific room category by its ID.
+     *
+     * @param id The ID of the room category to be deleted.
+     * @return ResponseEntity<Void>:
+     *          - 204 No Content: If the room category was successfully deleted.
+     *          - 404 Not Found: If no room category with the specified ID exists.
+     */
     @DeleteMapping("/{id}/delete")
     @PreAuthorize("@securityService.hasPermission('DELETE_ROOM_CATEGORY')")
     public ResponseEntity<Void> removeRoomCategory(@PathVariable Long id) {
@@ -83,6 +120,16 @@ public class RoomCategoryController {
         }
     }
 
+    /**
+     * Get Room Category by ID
+     *
+     * Fetch a room category by its ID.
+     *
+     * @param id The ID of the room category to retrieve.
+     * @return ResponseEntity<RoomCategory>:
+     *          - 200 OK: Returns the room category if found.
+     *          - 404 Not Found: If no room category with the specified ID exists.
+     */
     @GetMapping("/{id}")
     @PreAuthorize("@securityService.hasPermission('VIEW_ROOM_CATEGORY')")
     public ResponseEntity<RoomCategory> getRoomCategoryById(@PathVariable Long id) {
@@ -91,6 +138,18 @@ public class RoomCategoryController {
                 .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    /**
+     * Create Room Category
+     *
+     * Create a new room category with optional image upload.
+     *
+     * @param roomCategoryJson JSON representation of the room category.
+     * @param bindingResult Validation errors, if any.
+     * @param img Optional image for the room category.
+     * @return ResponseEntity<?>:
+     *          - 201 Created: Room category successfully created.
+     *          - 400 Bad Request: Invalid JSON format or missing required fields.
+     */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('CREATE_ROOM_CATEGORY')")
     public ResponseEntity<?> createRoomCategory(@RequestPart("roomCategory") String roomCategoryJson,
@@ -108,14 +167,20 @@ public class RoomCategoryController {
         return roomCategoryHandler.createRoomCategory(roomCategory, bindingResult, img);
     }
 
-//    @PutMapping("/{id}/edit")
-//    @PreAuthorize("@securityService.hasPermission('UPDATE_ROOM_CATEGORY')")
-//    public ResponseEntity<?> updateRoomCategory(@PathVariable Long id,
-//                                                @Valid @RequestBody RoomCategory roomCategory,
-//                                                BindingResult bindingResult) {
-//        return roomCategoryHandler.updateRoomCategory(id, roomCategory, bindingResult);
-//    }
-
+    /**
+     * Update Room Category
+     *
+     * Update an existing room category by its ID with optional image upload.
+     *
+     * @param id The ID of the room category to update.
+     * @param roomCategoryJson JSON representation of the room category to update.
+     * @param bindingResult Validation errors, if any.
+     * @param img Optional image for the room category.
+     * @return ResponseEntity<?>:
+     *          - 200 OK: Room category successfully updated.
+     *          - 400 Bad Request: Invalid JSON format or missing required fields.
+     *          - 404 Not Found: If no room category with the specified ID exists.
+     */
     @PutMapping(value = "/{id}/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('UPDATE_ROOM_CATEGORY')")
     public ResponseEntity<?> updateRoomCategory(@PathVariable Long id,
@@ -133,5 +198,4 @@ public class RoomCategoryController {
 
         return roomCategoryHandler.updateRoomCategory(id, roomCategory, bindingResult, img);
     }
-
 }
