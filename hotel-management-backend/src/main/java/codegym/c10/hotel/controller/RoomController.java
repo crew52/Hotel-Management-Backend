@@ -109,11 +109,51 @@ public class RoomController {
         return ResponseEntity.status(HttpStatus.CREATED).body(roomService.save(room));
     }
 
-    @PutMapping("/{id}")
+//    @PutMapping("/{id}")
+//    @PreAuthorize("@securityService.hasPermission('UPDATE_ROOM')")
+//    public ResponseEntity<?> updateRoom(@PathVariable Long id, @Valid @RequestBody Room room) {
+//        try {
+//            room.setId(id);
+//            Room updatedRoom = roomService.update(room);
+//            return ResponseEntity.ok(updatedRoom);
+//        } catch (EntityNotFoundException e) {
+//            return ResponseEntity.notFound().build();
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body("Error updating room: " + e.getMessage());
+//        }
+//    }
+
+    @PutMapping(value = "/{id}/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('UPDATE_ROOM')")
-    public ResponseEntity<?> updateRoom(@PathVariable Long id, @Valid @RequestBody Room room) {
+    public ResponseEntity<?> updateRoom(
+            @PathVariable Long id,
+            @RequestPart("room") String roomJson,
+            @RequestPart(value = "img1", required = false) MultipartFile img1,
+            @RequestPart(value = "img2", required = false) MultipartFile img2,
+            @RequestPart(value = "img3", required = false) MultipartFile img3,
+            @RequestPart(value = "img4", required = false) MultipartFile img4
+    ) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Room room;
         try {
-            room.setId(id);
+            ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+            room = mapper.readValue(roomJson, Room.class);
+            room.setId(id); // Gán ID vào Room
+        } catch (JsonProcessingException e) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("Invalid value provided",
+                    Collections.singletonMap("room", "Invalid JSON format or value")));
+        }
+
+        // Xử lý lưu ảnh mới (nếu có)
+        MultipartFile[] images = {img1, img2, img3, img4};
+        for (int i = 0; i < images.length; i++) {
+            if (images[i] != null && !images[i].isEmpty()) {
+                String path = storageService.storeWithUUID(images[i], "rooms");
+                room.getClass().getMethod("setImg" + (i + 1), String.class).invoke(room, path);
+            }
+        }
+
+        try {
             Room updatedRoom = roomService.update(room);
             return ResponseEntity.ok(updatedRoom);
         } catch (EntityNotFoundException e) {
@@ -123,4 +163,5 @@ public class RoomController {
                     .body("Error updating room: " + e.getMessage());
         }
     }
+
 }
