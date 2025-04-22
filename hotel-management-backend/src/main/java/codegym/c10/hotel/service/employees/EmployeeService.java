@@ -5,13 +5,17 @@ import codegym.c10.hotel.entity.Employee;
 import codegym.c10.hotel.entity.User;
 import codegym.c10.hotel.repository.EmployeeRepository;
 import codegym.c10.hotel.repository.UserRepository;
+import codegym.c10.hotel.service.uploadFile.StorageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @Service
@@ -21,6 +25,8 @@ public class EmployeeService implements IEmployeeService {
     private final EmployeeRepository employeeRepository;
     private final UserRepository userRepository;
     private final EmployeeMapperService employeeMapperService;
+    @Autowired
+    private StorageService storageService;
 
     @Override
     public Iterable<Employee> findAll() {
@@ -239,4 +245,63 @@ public class EmployeeService implements IEmployeeService {
             throw new IllegalArgumentException("User is already linked to another employee");
         }
     }
+
+    @Override
+    public EmployeeDto createEmployeeWithImage(EmployeeDto dto, MultipartFile imageFile) throws IOException {
+        Employee employee = employeeMapperService.convertToEntity(dto);
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            // Lưu file ảnh vào hệ thống/tệp/cơ sở dữ liệu (tuỳ mục đích)
+            String imagePath = storageService.storeWithUUID(imageFile, "employees"); // ví dụ lưu file ảnh
+            employee.setImgUrl(imagePath); // cập nhật đường dẫn trong entity
+        }
+
+        employeeRepository.save(employee);
+        return employeeMapperService.convertToDto(employee);
+    }
+
+    @Override
+    public EmployeeDto updateEmployeeWithImage(Long id, EmployeeDto employeeDto, MultipartFile imageFile) {
+        // Validate exists
+        Employee existingEmployee = findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Employee not found with id: " + id));
+
+        // Validate unique constraints
+        if (employeeDto.getPhone() != null &&
+                existsByPhoneAndIdNot(employeeDto.getPhone(), id)) {
+            throw new IllegalArgumentException("Phone number already exists");
+        }
+
+        if (employeeDto.getIdCard() != null &&
+                existsByIdCardAndIdNot(employeeDto.getIdCard(), id)) {
+            throw new IllegalArgumentException("ID card already exists");
+        }
+
+        // Validate user_id (nếu đang thay đổi user_id)
+        if (employeeDto.getUserId() != null &&
+                !employeeDto.getUserId().equals(existingEmployee.getUser().getId())) {
+            validateUserIdForUpdate(employeeDto.getUserId(), id);
+        }
+
+        // Set ID để đảm bảo convert chính xác
+        employeeDto.setId(id);
+
+        // Convert DTO to entity nhưng giữ lại trường ảnh cũ nếu chưa có ảnh mới
+        Employee employeeToUpdate = employeeMapperService.convertToEntity(employeeDto);
+        employeeToUpdate.setImgUrl(existingEmployee.getImgUrl()); // giữ lại ảnh cũ nếu không cập nhật ảnh mới
+
+        // Xử lý file ảnh nếu có
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String imageUrl = storageService.storeWithUUID(imageFile, "employees");
+            employeeToUpdate.setImgUrl(imageUrl);
+        }
+
+        // Save
+        Employee updatedEmployee = update(employeeToUpdate);
+
+        // Convert back to DTO
+        return employeeMapperService.convertToDto(updatedEmployee);
+    }
+
+
 }
