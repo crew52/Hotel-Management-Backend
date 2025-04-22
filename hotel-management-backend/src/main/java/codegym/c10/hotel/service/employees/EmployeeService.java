@@ -260,4 +260,48 @@ public class EmployeeService implements IEmployeeService {
         return employeeMapperService.convertToDto(employee);
     }
 
+    @Override
+    public EmployeeDto updateEmployeeWithImage(Long id, EmployeeDto employeeDto, MultipartFile imageFile) {
+        // Validate exists
+        Employee existingEmployee = findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Employee not found with id: " + id));
+
+        // Validate unique constraints
+        if (employeeDto.getPhone() != null &&
+                existsByPhoneAndIdNot(employeeDto.getPhone(), id)) {
+            throw new IllegalArgumentException("Phone number already exists");
+        }
+
+        if (employeeDto.getIdCard() != null &&
+                existsByIdCardAndIdNot(employeeDto.getIdCard(), id)) {
+            throw new IllegalArgumentException("ID card already exists");
+        }
+
+        // Validate user_id (nếu đang thay đổi user_id)
+        if (employeeDto.getUserId() != null &&
+                !employeeDto.getUserId().equals(existingEmployee.getUser().getId())) {
+            validateUserIdForUpdate(employeeDto.getUserId(), id);
+        }
+
+        // Set ID để đảm bảo convert chính xác
+        employeeDto.setId(id);
+
+        // Convert DTO to entity nhưng giữ lại trường ảnh cũ nếu chưa có ảnh mới
+        Employee employeeToUpdate = employeeMapperService.convertToEntity(employeeDto);
+        employeeToUpdate.setImgUrl(existingEmployee.getImgUrl()); // giữ lại ảnh cũ nếu không cập nhật ảnh mới
+
+        // Xử lý file ảnh nếu có
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String imageUrl = storageService.storeWithUUID(imageFile, "employees");
+            employeeToUpdate.setImgUrl(imageUrl);
+        }
+
+        // Save
+        Employee updatedEmployee = update(employeeToUpdate);
+
+        // Convert back to DTO
+        return employeeMapperService.convertToDto(updatedEmployee);
+    }
+
+
 }

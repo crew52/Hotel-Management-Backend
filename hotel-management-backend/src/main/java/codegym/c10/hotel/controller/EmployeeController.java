@@ -77,25 +77,25 @@ public class EmployeeController {
 //        }
 //    }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("@securityService.hasPermission('UPDATE_EMPLOYEE')")
-    public ResponseEntity<?> updateEmployee(
-            @PathVariable Long id,
-            @Valid @RequestBody EmployeeDto employeeDto) {
-        try {
-            EmployeeDto updatedEmployeeDto = employeeService.updateEmployee(id, employeeDto);
-            return ResponseEntity.ok(new ApiResponse(true, "Employee updated successfully", updatedEmployeeDto));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                    .body(new ApiResponse(false, e.getMessage()));
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ApiResponse(false, e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse(false, "Error updating employee: " + e.getMessage()));
-        }
-    }
+//    @PutMapping("/{id}")
+//    @PreAuthorize("@securityService.hasPermission('UPDATE_EMPLOYEE')")
+//    public ResponseEntity<?> updateEmployee(
+//            @PathVariable Long id,
+//            @Valid @RequestBody EmployeeDto employeeDto) {
+//        try {
+//            EmployeeDto updatedEmployeeDto = employeeService.updateEmployee(id, employeeDto);
+//            return ResponseEntity.ok(new ApiResponse(true, "Employee updated successfully", updatedEmployeeDto));
+//        } catch (IllegalArgumentException e) {
+//            return ResponseEntity.badRequest()
+//                    .body(new ApiResponse(false, e.getMessage()));
+//        } catch (EntityNotFoundException e) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                    .body(new ApiResponse(false, e.getMessage()));
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                    .body(new ApiResponse(false, "Error updating employee: " + e.getMessage()));
+//        }
+//    }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("@securityService.hasPermission('DELETE_EMPLOYEE')")
@@ -149,5 +149,35 @@ public class EmployeeController {
             return null;
         }
     }
+
+    @PutMapping(value = "/{id}/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("@securityService.hasPermission('UPDATE_EMPLOYEE')")
+    public ResponseEntity<?> updateEmployeeWithImage(
+            @PathVariable Long id,
+            @RequestPart("employee") String employeeJson,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile) {
+
+        try {
+            EmployeeDto employeeDto = parseEmployeeDtoJson(employeeJson);
+            if (employeeDto == null) {
+                Map<String, String> error = new HashMap<>();
+                error.put("employee", "Invalid JSON format or value");
+                return ResponseEntity.badRequest().body(new ErrorResponse("Invalid employee data", error));
+            }
+
+            // ID được truyền từ PathVariable sẽ overwrite mọi giá trị trong employeeDto
+            EmployeeDto updatedEmployeeDto = employeeService.updateEmployeeWithImage(id, employeeDto, imageFile);
+
+            return ResponseEntity.ok(new ApiResponse(true, "Employee updated successfully", updatedEmployeeDto));
+
+        } catch (IllegalArgumentException | EntityNotFoundException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Error updating employee: " + e.getMessage()));
+        }
+    }
+
 
 }
