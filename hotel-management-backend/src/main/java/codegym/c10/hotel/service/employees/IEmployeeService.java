@@ -5,7 +5,9 @@ import codegym.c10.hotel.entity.Employee;
 import codegym.c10.hotel.service.IGenerateService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Optional;
 
 public interface IEmployeeService extends IGenerateService<Employee> {
@@ -32,4 +34,5 @@ public interface IEmployeeService extends IGenerateService<Employee> {
     EmployeeDto findEmployeeDtoById(Long id);
     EmployeeDto createEmployee(EmployeeDto employeeDto);
     EmployeeDto updateEmployee(Long id, EmployeeDto employeeDto);
+    EmployeeDto createEmployeeWithImage(EmployeeDto dto, MultipartFile imageFile) throws IOException;
 }

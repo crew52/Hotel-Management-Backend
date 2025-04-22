@@ -5,13 +5,17 @@ import codegym.c10.hotel.entity.Employee;
 import codegym.c10.hotel.entity.User;
 import codegym.c10.hotel.repository.EmployeeRepository;
 import codegym.c10.hotel.repository.UserRepository;
+import codegym.c10.hotel.service.uploadFile.StorageService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.Optional;
 
 @Service
@@ -21,6 +25,8 @@ public class EmployeeService implements IEmployeeService {
     private final EmployeeRepository employeeRepository;
     private final UserRepository userRepository;
     private final EmployeeMapperService employeeMapperService;
+    @Autowired
+    private StorageService storageService;
 
     @Override
     public Iterable<Employee> findAll() {
@@ -239,4 +245,19 @@ public class EmployeeService implements IEmployeeService {
             throw new IllegalArgumentException("User is already linked to another employee");
         }
     }
+
+    @Override
+    public EmployeeDto createEmployeeWithImage(EmployeeDto dto, MultipartFile imageFile) throws IOException {
+        Employee employee = employeeMapperService.convertToEntity(dto);
+
+        if (imageFile != null && !imageFile.isEmpty()) {
+            // Lưu file ảnh vào hệ thống/tệp/cơ sở dữ liệu (tuỳ mục đích)
+            String imagePath = storageService.storeWithUUID(imageFile, "employees"); // ví dụ lưu file ảnh
+            employee.setImgUrl(imagePath); // cập nhật đường dẫn trong entity
+        }
+
+        employeeRepository.save(employee);
+        return employeeMapperService.convertToDto(employee);
+    }
+
 }
