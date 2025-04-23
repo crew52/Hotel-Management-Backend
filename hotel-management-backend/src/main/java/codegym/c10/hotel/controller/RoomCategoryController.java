@@ -27,6 +27,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * RoomCategoryController
+ *
+ * This controller handles HTTP requests related to Room Categories,
+ * including operations such as creation, retrieval, update, deletion, and advanced search.
+ */
+
 @RestController
 @RequestMapping("/api/room-categories")
 @CrossOrigin("*")
@@ -44,11 +51,11 @@ public class RoomCategoryController {
     /**
      * Get All Room Categories
      *
-     * Fetch a list of all room categories.
+     * Retrieves a list of all available room categories.
      *
-     * @return ResponseEntity<Iterable<RoomCategory>>: A response containing the list of room categories.
-     *          - 200 OK: Returns the list of room categories if available.
-     *          - 204 No Content: If no room categories exist.
+     * @return ResponseEntity containing:
+     *         - 200 OK: List of room categories.
+     *         - 204 No Content: If no room categories are found.
      */
     @GetMapping()
     @PreAuthorize("@securityService.hasPermission('VIEW_ROOM_CATEGORY')")
@@ -63,20 +70,20 @@ public class RoomCategoryController {
     /**
      * Search Room Categories
      *
-     * Search for room categories based on multiple filters such as keyword, status, and price range.
+     * Performs an advanced search for room categories using optional filters:
+     * keyword, status, price ranges (hourly, daily, overnight), and pagination.
      *
-     * @param keyword Optional query parameter to search by name of the room category.
-     * @param status Optional query parameter to filter by room category status.
-     * @param minHourlyPrice Optional query parameter to filter by minimum hourly price.
-     * @param maxHourlyPrice Optional query parameter to filter by maximum hourly price.
-     * @param minDailyPrice Optional query parameter to filter by minimum daily price.
-     * @param maxDailyPrice Optional query parameter to filter by maximum daily price.
-     * @param minOvernightPrice Optional query parameter to filter by minimum overnight price.
-     * @param maxOvernightPrice Optional query parameter to filter by maximum overnight price.
-     * @param page Page number for pagination.
-     * @param size Number of results per page.
-     * @return ResponseEntity<Page<RoomCategory>>: A paginated list of room categories matching the search criteria.
-     *          - 200 OK: Returns a page of room categories matching the search filters.
+     * @param keyword Optional keyword to search by name.
+     * @param status Optional status filter (e.g., ACTIVE, INACTIVE).
+     * @param minHourlyPrice Minimum hourly price filter.
+     * @param maxHourlyPrice Maximum hourly price filter.
+     * @param minDailyPrice Minimum daily price filter.
+     * @param maxDailyPrice Maximum daily price filter.
+     * @param minOvernightPrice Minimum overnight price filter.
+     * @param maxOvernightPrice Maximum overnight price filter.
+     * @param page Page number for pagination (default: 0).
+     * @param size Page size for pagination (default: 10).
+     * @return Paginated list of matching room categories (200 OK).
      */
     @GetMapping("/search")
     @PreAuthorize("@securityService.hasPermission('VIEW_ROOM_CATEGORY')")
@@ -102,12 +109,12 @@ public class RoomCategoryController {
     /**
      * Delete Room Category
      *
-     * Delete a specific room category by its ID.
+     * Deletes a room category by its ID.
      *
-     * @param id The ID of the room category to be deleted.
-     * @return ResponseEntity<Void>:
-     *          - 204 No Content: If the room category was successfully deleted.
-     *          - 404 Not Found: If no room category with the specified ID exists.
+     * @param id ID of the room category to delete.
+     * @return ResponseEntity:
+     *         - 204 No Content: Successfully deleted.
+     *         - 404 Not Found: If the ID does not exist.
      */
     @DeleteMapping("/{id}/delete")
     @PreAuthorize("@securityService.hasPermission('DELETE_ROOM_CATEGORY')")
@@ -123,12 +130,12 @@ public class RoomCategoryController {
     /**
      * Get Room Category by ID
      *
-     * Fetch a room category by its ID.
+     * Retrieves a room category by its ID.
      *
-     * @param id The ID of the room category to retrieve.
-     * @return ResponseEntity<RoomCategory>:
-     *          - 200 OK: Returns the room category if found.
-     *          - 404 Not Found: If no room category with the specified ID exists.
+     * @param id ID of the room category.
+     * @return ResponseEntity:
+     *         - 200 OK: Room category found.
+     *         - 404 Not Found: If not found.
      */
     @GetMapping("/{id}")
     @PreAuthorize("@securityService.hasPermission('VIEW_ROOM_CATEGORY')")
@@ -141,14 +148,14 @@ public class RoomCategoryController {
     /**
      * Create Room Category
      *
-     * Create a new room category with optional image upload.
+     * Creates a new room category with optional image upload.
      *
-     * @param roomCategoryJson JSON representation of the room category.
-     * @param bindingResult Validation errors, if any.
+     * @param roomCategoryJson JSON string representing the room category.
+     * @param bindingResult Holds validation results.
      * @param img Optional image for the room category.
-     * @return ResponseEntity<?>:
-     *          - 201 Created: Room category successfully created.
-     *          - 400 Bad Request: Invalid JSON format or missing required fields.
+     * @return ResponseEntity:
+     *         - 201 Created: Successfully created.
+     *         - 400 Bad Request: Invalid JSON or validation failure.
      */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('CREATE_ROOM_CATEGORY')")
@@ -170,21 +177,21 @@ public class RoomCategoryController {
     /**
      * Update Room Category
      *
-     * Update an existing room category by its ID with optional image upload.
+     * Updates an existing room category by ID with optional image upload.
      *
-     * @param id The ID of the room category to update.
-     * @param roomCategoryJson JSON representation of the room category to update.
-     * @param bindingResult Validation errors, if any.
-     * @param img Optional image for the room category.
-     * @return ResponseEntity<?>:
-     *          - 200 OK: Room category successfully updated.
-     *          - 400 Bad Request: Invalid JSON format or missing required fields.
-     *          - 404 Not Found: If no room category with the specified ID exists.
+     * @param id ID of the room category to update.
+     * @param roomCategoryJson JSON string representing the updated room category.
+     * @param bindingResult Holds validation results.
+     * @param img Optional image file.
+     * @return ResponseEntity:
+     *         - 200 OK: Successfully updated.
+     *         - 400 Bad Request: Invalid input or validation failure.
+     *         - 404 Not Found: If the category does not exist.
      */
     @PutMapping(value = "/{id}/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('UPDATE_ROOM_CATEGORY')")
     public ResponseEntity<?> updateRoomCategory(@PathVariable Long id,
-                                                @RequestPart("roomCategory") String roomCategoryJson,
+                                                @Valid @RequestPart("roomCategory") String roomCategoryJson,
                                                 BindingResult bindingResult,
                                                 @RequestPart(value = "img", required = false) MultipartFile img) {
         RoomCategory roomCategory;

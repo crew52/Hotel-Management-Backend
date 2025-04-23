@@ -10,4 +10,6 @@ public interface StorageService {
     String storeWithUUID(MultipartFile file, String subFolder);
 
     void deleteFile(String fileName);
+
+    boolean exists(String path);
 }
