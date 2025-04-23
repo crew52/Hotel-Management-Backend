@@ -37,11 +37,7 @@ public class PermissionParentService implements IPermissionParentService {
         if (permission.endsWith("_ROLE")) {
             parentPermissions.add(PermissionConstants.ROLE_MANAGEMENT);
         }
-        
-        if (permission.endsWith("_PERMISSION")) {
-            parentPermissions.add(PermissionConstants.PERMISSION_MANAGEMENT);
-        }
-        
+
         // Always consider SYSTEM_ADMIN as parent of all permissions
         parentPermissions.add(PermissionConstants.SYSTEM_ADMIN);
         

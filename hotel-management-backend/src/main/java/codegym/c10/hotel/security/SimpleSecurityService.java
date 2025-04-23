@@ -62,8 +62,6 @@ public class SimpleSecurityService {
             return PermissionConstants.USER_MANAGEMENT;
         } else if (permission.endsWith("_ROLE")) {
             return PermissionConstants.ROLE_MANAGEMENT;
-        } else if (permission.endsWith("_PERMISSION")) {
-            return PermissionConstants.PERMISSION_MANAGEMENT;
         }
         return null;
     }

@@ -46,11 +46,7 @@ public final class PermissionConstants {
     public static final String DELETE_ROLE = "DELETE_ROLE";
     public static final String ROLE_MANAGEMENT = "ROLE_MANAGEMENT";
     
-    public static final String VIEW_PERMISSION = "VIEW_PERMISSION";
-    public static final String CREATE_PERMISSION = "CREATE_PERMISSION";
-    public static final String UPDATE_PERMISSION = "UPDATE_PERMISSION";
-    public static final String DELETE_PERMISSION = "DELETE_PERMISSION";
-    public static final String PERMISSION_MANAGEMENT = "PERMISSION_MANAGEMENT";
+
     
     // System admin permissions
     public static final String VIEW_ACTIVITY_LOG = "VIEW_ACTIVITY_LOG";
