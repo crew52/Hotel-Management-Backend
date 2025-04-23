@@ -3,6 +3,8 @@ package codegym.c10.hotel.controller;
 import codegym.c10.hotel.eNum.RoomStatus;
 import codegym.c10.hotel.entity.Room;
 import codegym.c10.hotel.exception.ErrorResponse;
+import codegym.c10.hotel.exception.RoomHandler;
+import codegym.c10.hotel.service.IRoomCategoryService;
 import codegym.c10.hotel.service.IRoomService;
 import codegym.c10.hotel.service.uploadFile.StorageService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -14,27 +16,30 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.lang.reflect.InvocationTargetException;
 import java.util.Collections;
+import java.util.List;
 
 /**
- * Controller for managing rooms in the hotel system.
+ * RoomController is a REST controller responsible for managing room-related operations
+ * in the hotel system. It provides endpoints to perform CRUD operations and search functionality
+ * for rooms, along with image uploads.
  *
- * This class provides the following endpoints for room management:
- * 1. GET /api/rooms - List all rooms with pagination.
- * 2. GET /api/rooms/{id} - Get a room by its ID.
- * 3. GET /api/rooms/search - Search rooms based on filters like keyword, status, floor.
- * 4. DELETE /api/rooms/{id}/delete - Delete a room by its ID.
- * 5. POST /api/rooms - Create a new room with images.
- * 6. PUT /api/rooms/{id}/edit - Update an existing room with images.
+ * Endpoints:
+ * - GET /api/rooms: Fetch paginated list of rooms
+ * - GET /api/rooms/{id}: Get details of a specific room
+ * - GET /api/rooms/search: Search rooms by keyword, status, or floor
+ * - DELETE /api/rooms/{id}/delete: Delete a room
+ * - POST /api/rooms: Create a new room with optional image uploads
+ * - PUT /api/rooms/{id}/edit: Update a room with optional image updates
  */
+
 @RestController
 @RequestMapping("/api/rooms")
 @CrossOrigin("*")
@@ -46,12 +51,18 @@ public class RoomController {
     @Autowired
     private StorageService storageService;
 
+    @Autowired
+    private RoomHandler roomHandler;
+
+    @Autowired
+    private IRoomCategoryService roomCategoryService;
+
     /**
-     * Endpoint to get a paginated list of rooms.
+     * Retrieves a paginated list of all rooms that are not marked as deleted.
      *
-     * @param page Page number for pagination (default: 0)
-     * @param size Number of rooms per page (default: 3)
-     * @return A paginated list of rooms.
+     * @param page the page number to retrieve (default is 0)
+     * @param size the number of items per page (default is 3)
+     * @return a paginated list of Room objects
      */
     @GetMapping()
     @PreAuthorize("@securityService.hasPermission('VIEW_ROOM')")
@@ -63,10 +74,10 @@ public class RoomController {
     }
 
     /**
-     * Endpoint to get a room by its ID.
+     * Retrieves a room based on its ID.
      *
-     * @param id The ID of the room.
-     * @return The room if found, or a 404 Not Found response if not found.
+     * @param id the ID of the room to retrieve
+     * @return the Room object if found, or a 404 Not Found if the room does not exist
      */
     @GetMapping("/{id}")
     @PreAuthorize("@securityService.hasPermission('VIEW_ROOM')")
@@ -77,14 +88,14 @@ public class RoomController {
     }
 
     /**
-     * Endpoint to search rooms based on provided filters.
+     * Searches rooms based on optional filter parameters including keyword, status, and floor.
      *
-     * @param keyword Search keyword for room name or description.
-     * @param status Room status (optional).
-     * @param floor Floor number of the room (optional).
-     * @param page Page number for pagination (default: 0).
-     * @param size Number of rooms per page (default: 10).
-     * @return A paginated list of rooms matching the search criteria.
+     * @param keyword the search keyword (optional)
+     * @param status the status of the room (optional)
+     * @param floor the floor number to filter by (optional)
+     * @param page the page number for pagination (default is 0)
+     * @param size the number of rooms per page (default is 10)
+     * @return a paginated list of rooms that match the search criteria
      */
     @GetMapping("/search")
     @PreAuthorize("@securityService.hasPermission('VIEW_ROOM')")
@@ -99,11 +110,10 @@ public class RoomController {
     }
 
     /**
-     * Endpoint to delete a room by its ID.
+     * Deletes a room by marking it as deleted.
      *
-     * @param id The ID of the room.
-     * @return A 204 No Content response if deletion is successful,
-     *         or a 404 Not Found if the room doesn't exist.
+     * @param id the ID of the room to delete
+     * @return 204 No Content if successfully deleted, or 404 Not Found if the room does not exist
      */
     @DeleteMapping("/{id}/delete")
     @PreAuthorize("@securityService.hasPermission('DELETE_ROOM')")
@@ -117,11 +127,15 @@ public class RoomController {
     }
 
     /**
-     * Endpoint to create a new room with associated images.
+     * Creates a new room using the provided JSON string and optional image files.
      *
-     * @param roomJson JSON representation of the room.
-     * @param img1, img2, img3, img4 Optional images for the room.
-     * @return The created room, or an error response if the room data is invalid.
+     * @param roomJson the JSON representation of the room
+     * @param img1 optional image file 1
+     * @param img2 optional image file 2
+     * @param img3 optional image file 3
+     * @param img4 optional image file 4
+     * @param bindingResult used for validation (automatically filled by Spring)
+     * @return a ResponseEntity containing the created Room or validation errors
      */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('CREATE_ROOM')")
@@ -129,31 +143,35 @@ public class RoomController {
                                         @RequestPart(value = "img1", required = false) MultipartFile img1,
                                         @RequestPart(value = "img2", required = false) MultipartFile img2,
                                         @RequestPart(value = "img3", required = false) MultipartFile img3,
-                                        @RequestPart(value = "img4", required = false) MultipartFile img4) {
+                                        @RequestPart(value = "img4", required = false) MultipartFile img4,
+                                        BindingResult bindingResult) {
         Room room = parseRoomJson(roomJson);
         if (room == null) {
             return ResponseEntity.badRequest().body(new ErrorResponse("Invalid value provided",
                     Collections.singletonMap("room", "Invalid JSON format or value")));
         }
 
-        try {
-            handleRoomImages(room, new MultipartFile[]{img1, img2, img3, img4});
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error processing images: " + e.getMessage());
+        // Kiểm tra xem RoomCategory có tồn tại không
+        if (room.getRoomCategory() == null || !roomCategoryService.existsById(room.getRoomCategory().getId())) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("Room category not found",
+                    Collections.singletonMap("roomCategory", "Room category does not exist")));
         }
 
-        Room savedRoom = roomService.save(room);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedRoom);
+        List<MultipartFile> images = List.of(img1, img2, img3, img4);
+        return roomHandler.createRoom(room, bindingResult, images);
     }
 
     /**
-     * Endpoint to update an existing room by its ID and optionally update its images.
+     * Updates an existing room with new details and optional image updates.
      *
-     * @param id The ID of the room to update.
-     * @param roomJson JSON representation of the updated room.
-     * @param img1, img2, img3, img4 Optional images for the room.
-     * @return The updated room, or an error response if any issue occurs.
+     * @param id the ID of the room to update
+     * @param roomJson the updated room as a JSON string
+     * @param img1 optional new image file 1
+     * @param img2 optional new image file 2
+     * @param img3 optional new image file 3
+     * @param img4 optional new image file 4
+     * @param bindingResult used for validation (automatically filled by Spring)
+     * @return a ResponseEntity containing the updated Room or validation errors
      */
     @PutMapping(value = "/{id}/edit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('UPDATE_ROOM')")
@@ -162,31 +180,30 @@ public class RoomController {
                                         @RequestPart(value = "img1", required = false) MultipartFile img1,
                                         @RequestPart(value = "img2", required = false) MultipartFile img2,
                                         @RequestPart(value = "img3", required = false) MultipartFile img3,
-                                        @RequestPart(value = "img4", required = false) MultipartFile img4) {
+                                        @RequestPart(value = "img4", required = false) MultipartFile img4,
+                                        BindingResult bindingResult) {
         Room room = parseRoomJson(roomJson);
         if (room == null) {
             return ResponseEntity.badRequest().body(new ErrorResponse("Invalid value provided",
                     Collections.singletonMap("room", "Invalid JSON format or value")));
         }
-        room.setId(id);
 
-        try {
-            handleRoomImages(room, new MultipartFile[]{img1, img2, img3, img4});
-            Room updatedRoom = roomService.update(room);
-            return ResponseEntity.ok(updatedRoom);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error updating room: " + e.getMessage());
+        // Kiểm tra xem RoomCategory có tồn tại không
+        if (room.getRoomCategory() == null || !roomCategoryService.existsById(room.getRoomCategory().getId())) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("Room category not found",
+                    Collections.singletonMap("roomCategory", "Room category does not exist")));
         }
+
+        List<MultipartFile> images = List.of(img1, img2, img3, img4);
+        return roomHandler.updateRoom(id, room, bindingResult, images);
     }
 
+
     /**
-     * Helper method to parse a room JSON string into a Room object.
+     * Parses a JSON string into a Room object.
      *
-     * @param roomJson The JSON string to convert.
-     * @return A Room object, or null if JSON parsing fails.
+     * @param roomJson the JSON string representing the room
+     * @return the Room object if parsing is successful, otherwise null
      */
     private Room parseRoomJson(String roomJson) {
         try {
@@ -194,24 +211,6 @@ public class RoomController {
             return mapper.readValue(roomJson, Room.class);
         } catch (JsonProcessingException e) {
             return null;
-        }
-    }
-
-    /**
-     * Helper method to handle room image uploads.
-     *
-     * @param room The room object to update with image paths.
-     * @param images Array of images to upload.
-     * @throws NoSuchMethodException If the method to set an image is not found.
-     * @throws InvocationTargetException If an error occurs when invoking the setter.
-     * @throws IllegalAccessException If the method cannot be accessed.
-     */
-    private void handleRoomImages(Room room, MultipartFile[] images) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        for (int i = 0; i < images.length; i++) {
-            if (images[i] != null && !images[i].isEmpty()) {
-                String path = storageService.storeWithUUID(images[i], "rooms");
-                room.getClass().getMethod("setImg" + (i + 1), String.class).invoke(room, path);
-            }
         }
     }
 }

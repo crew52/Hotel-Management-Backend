@@ -42,4 +42,6 @@ public interface IRoomCategoryRepository extends JpaRepository<RoomCategory, Lon
             @Param("minOvernightPrice") Double minOvernightPrice,
             @Param("maxOvernightPrice") Double maxOvernightPrice,
             Pageable pageable);
+
+    boolean existsById(Long id);
 }
