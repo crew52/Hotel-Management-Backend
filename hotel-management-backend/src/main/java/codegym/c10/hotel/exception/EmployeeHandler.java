@@ -1,6 +1,7 @@
 package codegym.c10.hotel.exception;
 
 import codegym.c10.hotel.dto.EmployeeDto;
+import codegym.c10.hotel.service.employees.EmployeeMapperService;
 import codegym.c10.hotel.service.employees.IEmployeeService;
 import codegym.c10.hotel.service.uploadFile.StorageService;
 import jakarta.validation.ConstraintViolation;
@@ -22,8 +23,7 @@ public class EmployeeHandler {
 
     @Autowired
     private IEmployeeService employeeService;
-    @Autowired
-    private StorageService storageService;
+
     @Autowired
     private Validator validator;
 

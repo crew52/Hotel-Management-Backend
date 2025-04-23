@@ -123,7 +123,6 @@ public class EmployeeController {
         }
     }
 
-
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('CREATE_EMPLOYEE')")
     public ResponseEntity<?> createEmployee(@Valid @RequestPart("employee") String employeeJson,
