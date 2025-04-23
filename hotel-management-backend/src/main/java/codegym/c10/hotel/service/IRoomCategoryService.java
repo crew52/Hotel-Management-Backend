@@ -32,4 +32,6 @@ public interface IRoomCategoryService {
             Double minOvernightPrice,
             Double maxOvernightPrice,
             Pageable pageable);
+
+    boolean existsById(Long id);
 }

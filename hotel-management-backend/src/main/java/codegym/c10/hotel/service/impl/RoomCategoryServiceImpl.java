@@ -115,4 +115,8 @@ public class RoomCategoryServiceImpl implements IRoomCategoryService {
                 maxOvernightPrice,
                 pageable);
     }
+
+    public boolean existsById(Long id) {
+        return roomCategoryRepository.existsById(id);
+    }
 }
