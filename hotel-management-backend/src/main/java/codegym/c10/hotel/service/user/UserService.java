@@ -226,6 +226,8 @@ public class UserService implements IUserService {
         return userRepository.findByUsername(username);
     }
 
-
+    public boolean existsById(Long id) {
+        return userRepository.existsById(id);
+    }
 
 }

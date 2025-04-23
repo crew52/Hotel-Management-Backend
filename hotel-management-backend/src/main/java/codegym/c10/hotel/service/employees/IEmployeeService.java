@@ -36,4 +36,7 @@ public interface IEmployeeService extends IGenerateService<Employee> {
     EmployeeDto updateEmployee(Long id, EmployeeDto employeeDto);
     EmployeeDto createEmployeeWithImage(EmployeeDto dto, MultipartFile imageFile) throws IOException;
     EmployeeDto updateEmployeeWithImage(Long id, EmployeeDto employeeDto, MultipartFile imageFile);
+    boolean existsByUserId(Long userId); // One-to-One case
+
+    boolean existsByUserIdAndIdNot(Long userId, Long id); // for upda
 }

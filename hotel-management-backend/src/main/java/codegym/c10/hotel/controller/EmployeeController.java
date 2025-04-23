@@ -2,15 +2,16 @@ package codegym.c10.hotel.controller;
 
 import codegym.c10.hotel.dto.ApiResponse;
 import codegym.c10.hotel.dto.EmployeeDto;
-import codegym.c10.hotel.entity.Room;
 import codegym.c10.hotel.exception.ErrorResponse;
 import codegym.c10.hotel.service.employees.IEmployeeService;
+import codegym.c10.hotel.service.user.IUserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -19,9 +20,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import codegym.c10.hotel.exception.EmployeeHandler;
 
+import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,6 +36,13 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class EmployeeController {
     private final IEmployeeService employeeService;
+
+    @Autowired
+    private IUserService userService;
+
+    @Autowired
+    private EmployeeHandler employeeHandler;
+
 
     @GetMapping
     @PreAuthorize("@securityService.hasPermission('VIEW_EMPLOYEE')")
@@ -58,45 +70,6 @@ public class EmployeeController {
         }
     }
 
-//    @PostMapping
-//    @PreAuthorize("@securityService.hasPermission('CREATE_EMPLOYEE')")
-//    public ResponseEntity<?> createEmployee(@Valid @RequestBody EmployeeDto employeeDto) {
-//        try {
-//            EmployeeDto savedEmployeeDto = employeeService.createEmployee(employeeDto);
-//            return ResponseEntity.status(HttpStatus.CREATED)
-//                    .body(new ApiResponse(true, "Employee created successfully", savedEmployeeDto));
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest()
-//                    .body(new ApiResponse(false, e.getMessage()));
-//        } catch (EntityNotFoundException e) {
-//            return ResponseEntity.badRequest()
-//                    .body(new ApiResponse(false, e.getMessage()));
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(new ApiResponse(false, "Error creating employee: " + e.getMessage()));
-//        }
-//    }
-
-//    @PutMapping("/{id}")
-//    @PreAuthorize("@securityService.hasPermission('UPDATE_EMPLOYEE')")
-//    public ResponseEntity<?> updateEmployee(
-//            @PathVariable Long id,
-//            @Valid @RequestBody EmployeeDto employeeDto) {
-//        try {
-//            EmployeeDto updatedEmployeeDto = employeeService.updateEmployee(id, employeeDto);
-//            return ResponseEntity.ok(new ApiResponse(true, "Employee updated successfully", updatedEmployeeDto));
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest()
-//                    .body(new ApiResponse(false, e.getMessage()));
-//        } catch (EntityNotFoundException e) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body(new ApiResponse(false, e.getMessage()));
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(new ApiResponse(false, "Error updating employee: " + e.getMessage()));
-//        }
-//    }
-
     @DeleteMapping("/{id}")
     @PreAuthorize("@securityService.hasPermission('DELETE_EMPLOYEE')")
     public ResponseEntity<?> deleteEmployee(@PathVariable Long id) {
@@ -109,35 +82,6 @@ public class EmployeeController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(false, "Error deleting employee: " + e.getMessage()));
-        }
-    }
-
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("@securityService.hasPermission('CREATE_EMPLOYEE')")
-    public ResponseEntity<?> createEmployee(@RequestPart("employee") String employeeJson,
-                                            @RequestPart(value = "image", required = false) MultipartFile imageFile) {
-        try {
-            // Parse JSON thành đối tượng EmployeeDto
-//            EmployeeDto employeeDto = new ObjectMapper().readValue(employeeJson, EmployeeDto.class);
-            EmployeeDto employeeDto = parseEmployeeDtoJson(employeeJson);
-
-            // Gọi service xử lý lưu nhân viên + ảnh
-            EmployeeDto savedEmployeeDto = employeeService.createEmployeeWithImage(employeeDto, imageFile);
-
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(new ApiResponse(true, "Employee created successfully", savedEmployeeDto));
-
-        } catch (JsonProcessingException e) {
-            Map<String, String> error = new HashMap<>();
-            error.put("employee", "Invalid JSON format or value");
-            return ResponseEntity.badRequest().body(new ErrorResponse("Invalid employee data", error));
-
-        } catch (IllegalArgumentException | EntityNotFoundException e) {
-            return ResponseEntity.badRequest().body(new ApiResponse(false, e.getMessage()));
-
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ApiResponse(false, "Error creating employee: " + e.getMessage()));
         }
     }
 
@@ -179,5 +123,27 @@ public class EmployeeController {
         }
     }
 
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("@securityService.hasPermission('CREATE_EMPLOYEE')")
+    public ResponseEntity<?> createEmployee(@Valid @RequestPart("employee") String employeeJson,
+                                            BindingResult bindingResult,
+                                            @RequestPart(value = "image", required = false) MultipartFile imageFile) throws IOException {
+        EmployeeDto employeeDto = parseEmployeeDtoJson(employeeJson);
+
+        if (employeeDto == null) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("Invalid value provided",
+                    Collections.singletonMap("employee", "Invalid JSON format or value")));
+        }
+
+        // Kiểm tra userId có tồn tại không (có thể giữ lại hoặc chuyển logic này sang handler nếu muốn gom toàn bộ validation)
+        if (employeeDto.getUserId() == null || !userService.existsById(employeeDto.getUserId())) {
+            return ResponseEntity.badRequest().body(new ErrorResponse("User not found",
+                    Collections.singletonMap("user", "User does not exist")));
+        }
+
+        // Gọi handler để xử lý
+        return employeeHandler.createEmployeeDto(employeeDto, bindingResult, imageFile);
+    }
 
 }

@@ -39,5 +39,6 @@ public interface IUserService extends IGenerateService<User>, UserDetailsService
      */
     User findByUsername(String username);
 
+    boolean existsById(Long id);
 
 }

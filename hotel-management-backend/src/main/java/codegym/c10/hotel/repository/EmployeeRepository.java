@@ -34,4 +34,8 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
     Page<Employee> findAllByPositionAndDeletedFalse(
             String position, Pageable pageable);
+
+    boolean existsByUser_Id(Long userId); // One-to-One case
+
+    boolean existsByUser_IdAndIdNot(Long userId, Long id); // for update
 }

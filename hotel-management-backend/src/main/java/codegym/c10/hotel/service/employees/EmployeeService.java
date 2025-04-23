@@ -303,5 +303,13 @@ public class EmployeeService implements IEmployeeService {
         return employeeMapperService.convertToDto(updatedEmployee);
     }
 
+    @Override
+    public boolean existsByUserId(Long userId) {
+        return employeeRepository.existsByUser_Id(userId);
+    }
 
+    @Override
+    public boolean existsByUserIdAndIdNot(Long userId, Long id) {
+        return employeeRepository.existsByUser_IdAndIdNot(userId, id);
+    }
 }
