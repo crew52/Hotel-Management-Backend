@@ -66,7 +66,7 @@ public class UserController {
         return dto;
     }
 
-    @PutMapping("/{id}/status")
+    @PutMapping("/{id}/lock-account")
     @PreAuthorize("@securityService.hasPermission('UPDATE_USER')")
     public ResponseEntity<?> updateUserStatus(
             @PathVariable Long id,
