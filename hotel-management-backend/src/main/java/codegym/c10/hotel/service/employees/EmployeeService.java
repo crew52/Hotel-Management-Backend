@@ -290,8 +290,13 @@ public class EmployeeService implements IEmployeeService {
         Employee employeeToUpdate = employeeMapperService.convertToEntity(employeeDto);
         employeeToUpdate.setImgUrl(existingEmployee.getImgUrl()); // giữ lại ảnh cũ nếu không cập nhật ảnh mới
 
-        // Xử lý file ảnh nếu có
         if (imageFile != null && !imageFile.isEmpty()) {
+            // ✅ Xóa ảnh cũ trước khi cập nhật ảnh mới
+            String oldImageUrl = existingEmployee.getImgUrl();
+            if (oldImageUrl != null && storageService.exists(oldImageUrl)) {
+                storageService.deleteFile(oldImageUrl);
+            }
+
             String imageUrl = storageService.storeWithUUID(imageFile, "employees");
             employeeToUpdate.setImgUrl(imageUrl);
         }
@@ -303,5 +308,13 @@ public class EmployeeService implements IEmployeeService {
         return employeeMapperService.convertToDto(updatedEmployee);
     }
 
+    @Override
+    public boolean existsByUserId(Long userId) {
+        return employeeRepository.existsByUser_Id(userId);
+    }
 
+    @Override
+    public boolean existsByUserIdAndIdNot(Long userId, Long id) {
+        return employeeRepository.existsByUser_IdAndIdNot(userId, id);
+    }
 }
