@@ -3,6 +3,7 @@ package codegym.c10.hotel.exception;
 import codegym.c10.hotel.entity.RoomCategory;
 import codegym.c10.hotel.service.IRoomCategoryService;
 import codegym.c10.hotel.service.uploadFile.StorageService;
+import jakarta.validation.ConstraintViolation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -10,8 +11,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.validation.Validator;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 @Component
 public class RoomCategoryHandler {
@@ -22,14 +26,22 @@ public class RoomCategoryHandler {
     @Autowired
     private StorageService storageService;
 
+    @Autowired
+    private Validator validator;
+
     public ResponseEntity<?> createRoomCategory(RoomCategory roomCategory, BindingResult bindingResult, MultipartFile img) {
         Map<String, String> errors = validate(roomCategory, bindingResult, true);
+
+        // Validate annotation-based constraints
+        Set<ConstraintViolation<RoomCategory>> violations = validator.validate(roomCategory);
+        for (ConstraintViolation<RoomCategory> v : violations) {
+            errors.put(v.getPropertyPath().toString(), v.getMessage());
+        }
 
         if (!errors.isEmpty()) {
             return ResponseEntity.badRequest().body(new ErrorResponse("Validation failed", errors));
         }
 
-        // ✅ Chỉ lưu ảnh sau khi validate xong
         if (img != null && !img.isEmpty()) {
             String fileName = storageService.storeWithUUID(img, "room-category");
             roomCategory.setImgUrl(fileName);
@@ -39,51 +51,6 @@ public class RoomCategoryHandler {
         return new ResponseEntity<>(savedCategory, HttpStatus.CREATED);
     }
 
-
-//    public ResponseEntity<?> updateRoomCategory(Long id, RoomCategory roomCategory, BindingResult bindingResult) {
-//        Map<String, String> errors = validate(roomCategory, bindingResult, false, id);
-//
-//        if (!errors.isEmpty()) {
-//            return ResponseEntity.badRequest().body(new ErrorResponse("Validation failed", errors));
-//        }
-//
-//        try {
-//            roomCategory.setId(id);
-//            RoomCategory updated = roomCategoryService.update(roomCategory);
-//            return ResponseEntity.ok(updated);
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(new ErrorResponse("An error occurred while updating the room category"));
-//        }
-//    }
-
-//    public ResponseEntity<?> updateRoomCategory(Long id, RoomCategory roomCategory, BindingResult bindingResult, MultipartFile img) {
-//        Map<String, String> errors = validate(roomCategory, bindingResult, false, id);
-//
-//        if (!errors.isEmpty()) {
-//            return ResponseEntity.badRequest().body(new ErrorResponse("Validation failed", errors));
-//        }
-//
-//        try {
-//            roomCategory.setId(id);
-//
-//            // Xử lý ảnh nếu cần
-//            if (img != null && !img.isEmpty()) {
-//                String fileName = storageService.storeWithUUID(img, "room-category");
-//                roomCategory.setImgUrl(fileName);
-//            }
-//
-//            RoomCategory updated = roomCategoryService.update(roomCategory);
-//            return ResponseEntity.ok(updated);
-//        } catch (IllegalArgumentException e) {
-//            return ResponseEntity.badRequest().body(new ErrorResponse(e.getMessage()));
-//        } catch (Exception e) {
-//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-//                    .body(new ErrorResponse("An error occurred while updating the room category"));
-//        }
-//    }
     public ResponseEntity<?> updateRoomCategory(Long id, RoomCategory roomCategory, BindingResult bindingResult, MultipartFile img) {
         Map<String, String> errors = validate(roomCategory, bindingResult, false, id);
 

@@ -152,7 +152,7 @@ public class RoomCategoryController {
      */
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("@securityService.hasPermission('CREATE_ROOM_CATEGORY')")
-    public ResponseEntity<?> createRoomCategory(@RequestPart("roomCategory") String roomCategoryJson,
+    public ResponseEntity<?> createRoomCategory(@Valid @RequestPart("roomCategory") String roomCategoryJson,
                                                 BindingResult bindingResult,
                                                 @RequestPart(value = "img", required = false) MultipartFile img) {
         RoomCategory roomCategory;
