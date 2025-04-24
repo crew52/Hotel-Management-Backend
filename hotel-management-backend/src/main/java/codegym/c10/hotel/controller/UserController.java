@@ -6,10 +6,12 @@ import codegym.c10.hotel.dto.UserDto;
 import codegym.c10.hotel.dto.UserStatusDto;
 import codegym.c10.hotel.entity.Room;
 import codegym.c10.hotel.entity.User;
+import codegym.c10.hotel.mapper.UserMapper;
 import codegym.c10.hotel.service.user.IUserService;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -33,6 +35,9 @@ import java.util.stream.StreamSupport;
 public class UserController {
 
     private final IUserService userService;
+
+    @Autowired
+    private final UserMapper userMapper;
 
     @GetMapping()
     @PreAuthorize("@securityService.hasPermission('VIEW_USER')")
@@ -91,5 +96,13 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new ApiResponse(false, "Error updating user status: " + e.getMessage()));
         }
+    }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("@securityService.hasPermission('VIEW_USER')")
+    public ResponseEntity<UserDto> getUserById(@PathVariable Long id) {
+        return userService.findById(id)
+                .map(user -> new ResponseEntity<>(userMapper.toDto(user), HttpStatus.OK))
+                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 } 
