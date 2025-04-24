@@ -12,6 +12,7 @@ import java.util.Set;
 public class UserDto {
     private Long id;
     private String username;
+    private boolean isLocked;
     private String email;
     private Set<String> roleNames; // Chỉ lưu tên các vai trò
 }
