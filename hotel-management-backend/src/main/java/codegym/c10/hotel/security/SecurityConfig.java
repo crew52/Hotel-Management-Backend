@@ -93,7 +93,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/logs/**").authenticated()
                         
                         // Các request còn lại cũng cần phải xác thực
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
                 );
 
         return http.build();
