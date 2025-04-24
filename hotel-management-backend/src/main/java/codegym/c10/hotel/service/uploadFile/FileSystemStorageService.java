@@ -18,10 +18,10 @@ public class FileSystemStorageService implements StorageService {
 
     /**
      * Constructor that initializes the root location for file storage.
-     * The root location is set to: "src/main/java/codegym/c10/hotel/images".
+     * The root location is set to: "src/main/java/codegym/c10/hotel/images/".
      */
     public FileSystemStorageService() {
-        this.rootLocation = Paths.get("src/main/java/codegym/c10/hotel/images");
+        this.rootLocation = Paths.get("src/main/java/codegym/c10/hotel/images/");
     }
 
     /**
