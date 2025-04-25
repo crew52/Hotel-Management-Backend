@@ -69,6 +69,11 @@ public class RoomService implements IRoomService {
     }
 
     @Override
+    public Optional<Room> findByIdAndStatusAndIsCleanTrueAndDeletedFalse(Long id) {
+        return roomRepository.findByIdAndStatusAndIsCleanTrueAndDeletedFalse(id, RoomStatus.AVAILABLE);
+    }
+
+    @Override
     public Iterable<Room> findAll() {
         return null;
         //TODO

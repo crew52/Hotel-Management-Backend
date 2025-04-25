@@ -36,7 +36,7 @@ public class Room extends BaseEntity {
 
     @NotNull(message = "Status is required")
     @Enumerated(EnumType.STRING)
-    @Column(name = "status", columnDefinition = "ENUM('AVAILABLE', 'MAINTENANCE', 'OCCUPIED') DEFAULT 'AVAILABLE'")
+    @Column(name = "status", columnDefinition = "ENUM('AVAILABLE', 'UPCOMING', 'IN_USE', 'CHECKOUT_SOON', 'MAINTENANCE','OVERDUE') DEFAULT 'AVAILABLE'")
     private RoomStatus status;
 
     @Size(max = 1000, message = "Note must be less than 1000 characters")
