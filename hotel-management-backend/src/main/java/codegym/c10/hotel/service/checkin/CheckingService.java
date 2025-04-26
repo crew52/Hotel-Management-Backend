@@ -1,30 +1,19 @@
 package codegym.c10.hotel.service.checkin;
 
-import codegym.c10.hotel.dto.BookingResponseDTO;
-import codegym.c10.hotel.dto.RoomBookingDetailsDTO;
-import codegym.c10.hotel.dto.RoomBookingRequestDTO;
-import codegym.c10.hotel.dto.WalkInRequestDTO;
-import codegym.c10.hotel.eNum.BookingDetailStatus;
-import codegym.c10.hotel.eNum.BookingStatus;
-import codegym.c10.hotel.eNum.RentType;
-import codegym.c10.hotel.eNum.RoomStatus;
+import codegym.c10.hotel.dto.*;
+import codegym.c10.hotel.eNum.*;
 import codegym.c10.hotel.entity.*;
 import codegym.c10.hotel.exception.RoomNotAvailableException;
-import codegym.c10.hotel.repository.IBookingDetailsRepository;
-import codegym.c10.hotel.repository.IBookingRepository;
-import codegym.c10.hotel.repository.IRoomRepository;
+import codegym.c10.hotel.repository.*;
 import codegym.c10.hotel.service.IRoomService;
 import codegym.c10.hotel.service.user.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.transaction.annotation.Transactional;
+import java.util.*;
 
 @Service
 public class CheckingService {
@@ -46,9 +35,19 @@ public class CheckingService {
 
     @Transactional
     public BookingResponseDTO createBooking(WalkInRequestDTO walkInRequestDTO, Long userId) {
-        User user = userService.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+        User user = getUserById(userId);
+        Booking booking = createNewBooking(walkInRequestDTO, user);
+        List<RoomBookingDetailsDTO> roomDetailsList = processRoomBookings(walkInRequestDTO.getRooms(), booking);
 
+        return buildBookingResponseDTO(booking, roomDetailsList, userId);
+    }
+
+    private User getUserById(Long userId) {
+        return userService.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+    }
+
+    private Booking createNewBooking(WalkInRequestDTO walkInRequestDTO, User user) {
         Booking booking = new Booking();
         booking.setCustomerName(walkInRequestDTO.getCustomerName());
         booking.setCustomerPhone(walkInRequestDTO.getCustomerPhone());
@@ -57,105 +56,121 @@ public class CheckingService {
         booking.setBookingStatus(BookingStatus.PENDING);
         booking.setCreatedBy(user);
         bookingRepository.save(booking);
+        return booking;
+    }
 
+    private List<RoomBookingDetailsDTO> processRoomBookings(List<RoomBookingRequestDTO> roomRequests, Booking booking) {
         List<RoomBookingDetailsDTO> roomDetailsList = new ArrayList<>();
-        for (RoomBookingRequestDTO roomRequest : walkInRequestDTO.getRooms()) {
-            Optional<Room> roomOptional = roomService.findByIdAndStatusAndIsCleanTrueAndDeletedFalse(roomRequest.getRoomId());
 
-            if (!roomOptional.isPresent()) {
-                throw new RoomNotAvailableException("Room with ID " + roomRequest.getRoomId() + " is not suitable (not available, not clean, or does not exist).");
-            }
+        for (RoomBookingRequestDTO roomRequest : roomRequests) {
+            Room room = validateRoomAvailability(roomRequest.getRoomId());
 
-            Room room = roomOptional.get();
-            BookingDetail bookingDetails = new BookingDetail();
-            Booking bookingEntity = bookingRepository.findById(booking.getId())
-                    .orElseThrow(() -> new RuntimeException("Booking not found"));
-
-            bookingDetails.setBooking(bookingEntity);
-            bookingDetails.setRoom(room);
-
-            // Sử dụng checkinTime trực tiếp từ roomRequest
-            LocalDateTime checkinTime = roomRequest.getCheckinTime();
-            bookingDetails.setCheckinTime(checkinTime);
-
-            // Tính toán thời gian checkout dựa trên loại thuê phòng và thời gian thuê
-            LocalDateTime checkoutTime = checkinTime; // Bắt đầu từ checkinTime
-
-//            if ("HOUSE".equals(roomRequest.getRentType())) {
-//                checkoutTime = checkoutTime.plusHours(roomRequest.getDuration()); // HOUSE: Cộng thêm thời gian thuê theo giờ
-//            } else if ("DAILY".equals(roomRequest.getRentType())) {
-//                checkoutTime = checkoutTime.plusDays(roomRequest.getDuration()); // DAILY: Cộng thêm thời gian thuê theo ngày
-//            } else if ("OVERNIGHT".equals(roomRequest.getRentType())) {
-//                // OVERNIGHT: Đặt thời gian checkout vào 6 giờ sáng ngày hôm sau
-//                checkoutTime = checkoutTime.toLocalDate().plusDays(1).atTime(6, 0); // 6 AM ngày hôm sau
-//            }
-
-//            // Kiểm tra xem thời gian checkout có ít nhất 1 giờ sau check-in không
-//            if (checkoutTime.isBefore(checkinTime.plusHours(1))) {
-//                throw new IllegalArgumentException("Checkout time must be at least 1 hour later than check-in time.");
-//            }
-
-            bookingDetails.setCheckoutTime(checkoutTime.plusHours(1)); // Set thời gian checkout đã tính toán
-            bookingDetails.setRentType(roomRequest.getRentType());
-            bookingDetails.setDuration(roomRequest.getDuration());
-            bookingDetails.setPrice(calculatePrice(room, roomRequest.getRentType(), roomRequest.getDuration()));
-            bookingDetails.setStatus(BookingDetailStatus.BOOKED);
-
+            BookingDetail bookingDetails = createBookingDetail(roomRequest, room, booking);
             bookingDetailsRepository.save(bookingDetails);
 
-//            room.setStatus(RoomStatus.IN_USE);
-//            roomRepository.save(room);
+            room.setStatus(RoomStatus.IN_USE);
+            roomRepository.save(room);
 
-            // Thêm thông tin phòng vào response DTO
-            RoomBookingDetailsDTO roomBookingDetailsDTO = new RoomBookingDetailsDTO();
-            roomBookingDetailsDTO.setRoomId(room.getId());
-            roomBookingDetailsDTO.setRoomCategoryName(room.getRoomCategory().getName());
-            roomBookingDetailsDTO.setRentType(bookingDetails.getRentType());
-            // Kiểm tra rentType và lấy giá tương ứng
-            if (bookingDetails.getRentType() == RentType.HOURLY) {
-                roomBookingDetailsDTO.setPrice(room.getRoomCategory().getHourlyPrice());
-            }else if (bookingDetails.getRentType() == RentType.DAILY) {
-                roomBookingDetailsDTO.setPrice(room.getRoomCategory().getDailyPrice());
-            }else {
-                roomBookingDetailsDTO.setPrice(room.getRoomCategory().getOvernightPrice());
-            }
-            roomBookingDetailsDTO.setPriceTotal(bookingDetails.getPrice());
-            roomBookingDetailsDTO.setStatus(bookingDetails.getStatus());
-            roomBookingDetailsDTO.setCheckinTime(checkinTime);
-            roomBookingDetailsDTO.setCheckoutTime(checkoutTime); // Thời gian checkout đã tính toán
-            roomBookingDetailsDTO.setDuration(roomRequest.getDuration());
+            RoomBookingDetailsDTO roomBookingDetailsDTO = mapToRoomBookingDetailsDTO(room, bookingDetails, roomRequest);
             roomDetailsList.add(roomBookingDetailsDTO);
         }
 
-        // Tạo và trả về BookingResponseDTO
-        BookingResponseDTO bookingResponseDTO = new BookingResponseDTO();
-        bookingResponseDTO.setBookingId(booking.getId());
-        bookingResponseDTO.setCustomerName(booking.getCustomerName());
-        bookingResponseDTO.setCustomerPhone(booking.getCustomerPhone());
-        bookingResponseDTO.setCustomerNote(booking.getCustomerNote());
-        bookingResponseDTO.setPaidAmount(booking.getPaidAmount());
-        bookingResponseDTO.setBookingStatus(booking.getBookingStatus());
-        bookingResponseDTO.setRooms(roomDetailsList);
-        bookingResponseDTO.setBookingCreatedAt(booking.getCreatedAt()); // Thời gian tạo booking
-        bookingResponseDTO.setCreatedBy(userId); // Người tạo booking
+        return roomDetailsList;
+    }
 
-        return bookingResponseDTO; // Trả về BookingResponseDTO đã tùy chỉnh
+    private Room validateRoomAvailability(Long roomId) {
+        return roomService.findByIdAndStatusAndIsCleanTrueAndDeletedFalse(roomId)
+                .orElseThrow(() -> new RoomNotAvailableException("Room with ID " + roomId + " is not suitable (not available, not clean, or does not exist)."));
+    }
+
+    private BookingDetail createBookingDetail(RoomBookingRequestDTO roomRequest, Room room, Booking booking) {
+        LocalDateTime checkinTime = roomRequest.getCheckinTime();
+        LocalDateTime checkoutTime = calculateCheckoutTime(roomRequest.getRentType(), roomRequest.getDuration(), checkinTime);
+
+        if (checkoutTime.isBefore(checkinTime.plusHours(1))) {
+            throw new IllegalArgumentException("Checkout time must be at least 1 hour later than check-in time.");
+        }
+
+        BookingDetail bookingDetails = new BookingDetail();
+        bookingDetails.setBooking(booking);
+        bookingDetails.setRoom(room);
+        bookingDetails.setCheckinTime(checkinTime);
+        bookingDetails.setCheckoutTime(checkoutTime);
+        bookingDetails.setRentType(roomRequest.getRentType());
+        bookingDetails.setDuration(roomRequest.getDuration());
+        bookingDetails.setPrice(calculatePrice(room, roomRequest.getRentType(), roomRequest.getDuration()));
+        bookingDetails.setStatus(BookingDetailStatus.BOOKED);
+
+        return bookingDetails;
+    }
+
+    private LocalDateTime calculateCheckoutTime(RentType rentType, int duration, LocalDateTime checkinTime) {
+        switch (rentType) {
+            case HOURLY:
+                return checkinTime.plusHours(duration);
+            case DAILY:
+                return checkinTime.plusDays(duration);
+            case OVERNIGHT:
+                return checkinTime.toLocalDate().plusDays(1).atTime(6, 0);
+            default:
+                throw new IllegalArgumentException("Unsupported rent type");
+        }
+    }
+
+    private RoomBookingDetailsDTO mapToRoomBookingDetailsDTO(Room room, BookingDetail details, RoomBookingRequestDTO roomRequest) {
+        RoomBookingDetailsDTO dto = new RoomBookingDetailsDTO();
+        dto.setRoomId(room.getId());
+        dto.setRoomCategoryName(room.getRoomCategory().getName());
+        dto.setRentType(details.getRentType());
+
+        switch (details.getRentType()) {
+            case HOURLY:
+                dto.setPrice(room.getRoomCategory().getHourlyPrice());
+                break;
+            case DAILY:
+                dto.setPrice(room.getRoomCategory().getDailyPrice());
+                break;
+            case OVERNIGHT:
+                dto.setPrice(room.getRoomCategory().getOvernightPrice());
+                break;
+        }
+
+        dto.setPriceTotal(details.getPrice());
+        dto.setStatus(details.getStatus());
+        dto.setCheckinTime(details.getCheckinTime());
+        dto.setCheckoutTime(details.getCheckoutTime());
+        dto.setDuration(roomRequest.getDuration());
+
+        return dto;
+    }
+
+    private BookingResponseDTO buildBookingResponseDTO(Booking booking, List<RoomBookingDetailsDTO> roomDetailsList, Long userId) {
+        BookingResponseDTO dto = new BookingResponseDTO();
+        dto.setBookingId(booking.getId());
+        dto.setCustomerName(booking.getCustomerName());
+        dto.setCustomerPhone(booking.getCustomerPhone());
+        dto.setCustomerNote(booking.getCustomerNote());
+        dto.setPaidAmount(booking.getPaidAmount());
+        dto.setBookingStatus(booking.getBookingStatus());
+        dto.setRooms(roomDetailsList);
+        dto.setBookingCreatedAt(booking.getCreatedAt());
+        dto.setCreatedBy(userId);
+        return dto;
     }
 
     public BigDecimal calculatePrice(Room room, RentType rentType, int duration) {
-        RoomCategory roomCategory = room.getRoomCategory();
-        BigDecimal price = BigDecimal.ZERO;
+        RoomCategory category = room.getRoomCategory();
+        BigDecimal price;
 
-        // Tính giá dựa trên rentType
         switch (rentType) {
             case HOURLY:
-                price = roomCategory.getHourlyPrice().multiply(BigDecimal.valueOf(duration));
+                price = category.getHourlyPrice().multiply(BigDecimal.valueOf(duration));
                 break;
             case DAILY:
-                price = roomCategory.getDailyPrice().multiply(BigDecimal.valueOf(duration));
+                price = category.getDailyPrice().multiply(BigDecimal.valueOf(duration));
                 break;
             case OVERNIGHT:
-                price = roomCategory.getOvernightPrice().multiply(BigDecimal.valueOf(duration));
+                price = category.getOvernightPrice().multiply(BigDecimal.valueOf(duration));
                 break;
             default:
                 throw new IllegalArgumentException("Invalid RentType");
@@ -164,4 +179,3 @@ public class CheckingService {
         return price.setScale(2, BigDecimal.ROUND_HALF_UP);
     }
 }
-
