@@ -56,7 +56,7 @@ public class JwtUtil {
                 .signWith(getSigningKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
-    
+
     public String extractUsername(String token) {
         try {
             return Jwts.parserBuilder()
@@ -70,6 +70,32 @@ public class JwtUtil {
             throw e;  // Rethrow to be caught by the filter
         } catch (Exception e) {
             logger.error("Could not extract username from token: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    public Long extractUserId(String token) {
+        try {
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+            // Assuming "userId" is stored as an Integer or Long
+            Object userIdClaim = claims.get("userId");
+            if (userIdClaim instanceof Integer) {
+                return ((Integer) userIdClaim).longValue();
+            } else if (userIdClaim instanceof Long) {
+                return (Long) userIdClaim;
+            } else {
+                logger.error("User ID claim is not of expected type (Integer/Long): {}", userIdClaim);
+                return null;
+            }
+        } catch (ExpiredJwtException e) {
+            logger.error("JWT token is expired when extracting userId: {}", e.getMessage());
+            throw e; // Rethrow to be caught by the filter or caller
+        } catch (Exception e) {
+            logger.error("Could not extract userId from token: {}", e.getMessage());
             return null;
         }
     }
@@ -100,7 +126,7 @@ public class JwtUtil {
             final Date expiration = extractExpiration(token);
             boolean isExpired = expiration.before(new Date());
             if (isExpired) {
-                logger.warn("Token is expired. Expiration date: {}, Current date: {}", 
+                logger.warn("Token is expired. Expiration date: {}, Current date: {}",
                            expiration, new Date());
             }
             return isExpired;

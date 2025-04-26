@@ -32,4 +32,5 @@ public interface IRoomRepository extends JpaRepository<Room, Long> {
             @Param("floor") Integer floor,
             Pageable pageable);
 
+    Optional<Room> findByIdAndStatusAndIsCleanTrueAndDeletedFalse(Long id, RoomStatus status);
 }
