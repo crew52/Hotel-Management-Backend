@@ -114,16 +114,25 @@ public class RoomCategoryController {
      * @param id ID of the room category to delete.
      * @return ResponseEntity:
      *         - 204 No Content: Successfully deleted.
-     *         - 404 Not Found: If the ID does not exist.
+     *         - 400 Bad Request: If there are still rooms linked to the category.
+     *         - 404 Not Found: If the room category with the given ID does not exist.
+     *         - 500 Internal Server Error: If an unexpected error occurs.
      */
     @DeleteMapping("/{id}/delete")
     @PreAuthorize("@securityService.hasPermission('DELETE_ROOM_CATEGORY')")
-    public ResponseEntity<Void> removeRoomCategory(@PathVariable Long id) {
+    public ResponseEntity<?> removeRoomCategory(@PathVariable Long id) {
         try {
             roomCategoryService.remove(id);
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+            return ResponseEntity.noContent().build(); // Xóa thành công, không trả nội dung
         } catch (EntityNotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage())); // Báo lỗi không tìm thấy
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage())); // Báo lỗi do còn Room liên kết
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "An unexpected error occurred."));
         }
     }
 

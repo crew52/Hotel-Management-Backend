@@ -2,6 +2,7 @@ package codegym.c10.hotel.repository;
 
 import codegym.c10.hotel.eNum.RoomStatus;
 import codegym.c10.hotel.entity.Room;
+import codegym.c10.hotel.entity.RoomCategory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -33,4 +34,5 @@ public interface IRoomRepository extends JpaRepository<Room, Long> {
             Pageable pageable);
 
     Optional<Room> findByIdAndStatusAndIsCleanTrueAndDeletedFalse(Long id, RoomStatus status);
+    boolean existsByRoomCategory(RoomCategory roomCategory);
 }
