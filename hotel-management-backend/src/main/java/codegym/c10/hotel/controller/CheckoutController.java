@@ -2,6 +2,7 @@ package codegym.c10.hotel.controller;
 
 import codegym.c10.hotel.dto.CheckoutRequestDTO;
 import codegym.c10.hotel.dto.FeeResponseDTO;
+import codegym.c10.hotel.dto.InvoiceResponseDTO;
 import codegym.c10.hotel.service.checkout.CheckoutService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -26,5 +27,12 @@ public class CheckoutController {
     public ResponseEntity<List<FeeResponseDTO>> getFee(@PathVariable("id") Long bookingId) {
         List<FeeResponseDTO> feeList = checkoutService.calculateFee(bookingId);
         return ResponseEntity.ok(feeList);
+    }
+
+
+    @GetMapping("/{id}/invoice")
+    public ResponseEntity<InvoiceResponseDTO> getInvoice(@PathVariable("id") Long bookingId) {
+        InvoiceResponseDTO invoice = checkoutService.getInvoice(bookingId);
+        return ResponseEntity.ok(invoice);
     }
 }

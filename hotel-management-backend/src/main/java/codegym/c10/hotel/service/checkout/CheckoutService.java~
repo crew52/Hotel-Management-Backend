@@ -78,7 +78,7 @@ public class CheckoutService {
         for (BookingDetail detail : booking.getBookingDetails()) {
             RoomInvoiceDTO roomDTO = new RoomInvoiceDTO();
             roomDTO.setRoomId(detail.getRoom().getId());
-            roomDTO.setRoomName(detail.getRoom().getNote());
+            roomDTO.setRoomName(detail.getRoom().getNote());  
             roomDTO.setRentType(detail.getRentType().name());
             roomDTO.setDuration(detail.getDuration());
             roomDTO.setUnitPrice(detail.getPrice());
