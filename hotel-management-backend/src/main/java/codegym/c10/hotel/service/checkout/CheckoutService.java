@@ -1,8 +1,10 @@
 package codegym.c10.hotel.service.checkout;
 
 import codegym.c10.hotel.dto.CheckoutRequestDTO;
+import codegym.c10.hotel.dto.FeeResponseDTO;
 import codegym.c10.hotel.eNum.RoomStatus;
 import codegym.c10.hotel.entity.Booking;
+import codegym.c10.hotel.entity.BookingDetail;
 import codegym.c10.hotel.entity.Room;
 import codegym.c10.hotel.repository.IBookingRepository;
 import codegym.c10.hotel.repository.IRoomRepository;
@@ -11,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class CheckoutService {
@@ -33,5 +37,28 @@ public class CheckoutService {
         room.setIsClean(requestDTO.getIsClean());
         room.setStatus(RoomStatus.AVAILABLE);
         roomRepository.save(room);
+    }
+
+
+    public List<FeeResponseDTO> calculateFee(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking không tồn tại"));
+
+        List<FeeResponseDTO> feeList = new ArrayList<>();
+        for (BookingDetail detail : booking.getBookingDetails()) {
+            String rentType = detail.getRentType().name();
+            int duration = detail.getDuration();
+            java.math.BigDecimal unitPrice = detail.getPrice();
+            java.math.BigDecimal totalFee = unitPrice.multiply(java.math.BigDecimal.valueOf(duration));
+
+            feeList.add(new FeeResponseDTO(
+                    detail.getId(),
+                    rentType,
+                    duration,
+                    unitPrice,
+                    totalFee
+            ));
+        }
+        return feeList;
     }
 }
