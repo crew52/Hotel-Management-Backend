@@ -70,7 +70,14 @@ public class CheckingService {
         BigDecimal totalAmount = BigDecimal.ZERO; // Khởi tạo tổng tiền
 
         for (RoomBookingRequestDTO roomRequest : roomRequests) {
-            Room room = validateRoomAvailability(roomRequest.getRoomId());
+            LocalDateTime checkinTime = roomRequest.getCheckinTime();
+            // Kiểm tra nếu thời gian checkin là quá khứ
+            if (checkinTime.isBefore(LocalDateTime.now())) {
+                throw new IllegalArgumentException("Check-in time cannot be in the past.");
+            }
+            LocalDateTime checkoutTime = calculateCheckoutTime(roomRequest.getRentType(), roomRequest.getDuration(), checkinTime);
+
+            Room room = validateRoomAvailability(roomRequest.getRoomId(), checkinTime, checkoutTime);
 
             BookingDetail bookingDetails = createBookingDetail(roomRequest, room, booking);
             bookingDetailsRepository.save(bookingDetails);
@@ -90,10 +97,15 @@ public class CheckingService {
         return roomDetailsList;
     }
 
-
-    private Room validateRoomAvailability(Long roomId) {
-        return roomService.findByIdAndStatusAndIsCleanTrueAndDeletedFalse(roomId)
+    private Room validateRoomAvailability(Long roomId, LocalDateTime checkinTime, LocalDateTime checkoutTime) {
+        Room room = roomService.findByIdAndStatusAndIsCleanTrueAndDeletedFalse(roomId)
                 .orElseThrow(() -> new RoomNotAvailableException("Room with ID " + roomId + " is not suitable (not available, not clean, or does not exist)."));
+
+        if (bookingDetailsRepository.existsByRoomIdAndTimeOverlap(roomId, checkinTime, checkoutTime)) {
+            throw new RoomNotAvailableException("Room with ID " + roomId + " is already booked in the selected time range.");
+        }
+
+        return room;
     }
 
     private BookingDetail createBookingDetail(RoomBookingRequestDTO roomRequest, Room room, Booking booking) {
@@ -164,11 +176,11 @@ public class CheckingService {
     private BookingResponseDTO buildBookingResponseDTO(Booking booking, List<RoomBookingDetailsDTO> roomDetailsList, Long userId) {
         BookingResponseDTO dto = new BookingResponseDTO();
         dto.setBookingId(booking.getId());
-        dto.setCustomerName(booking.getCustomer().getFullName());   // lấy từ Customer
-        dto.setCustomerPhone(booking.getCustomer().getPhone()); // lấy từ Customer
-        dto.setNote(booking.getNote());                         // Booking có trường note
+        dto.setCustomerName(booking.getCustomer().getFullName());
+        dto.setCustomerPhone(booking.getCustomer().getPhone());
+        dto.setNote(booking.getNote());
         dto.setPaidAmount(booking.getPaidAmount());
-        dto.setTotalAmount(booking.getTotalAmount());           // bạn nên tính tổng (nếu cần)
+        dto.setTotalAmount(booking.getTotalAmount());
         dto.setBookingStatus(booking.getBookingStatus());
         dto.setRooms(roomDetailsList);
         dto.setBookingCreatedAt(booking.getCreatedAt());
