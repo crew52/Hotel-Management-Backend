@@ -155,7 +155,6 @@ CREATE TABLE user_role
             ON UPDATE CASCADE
 );
 
-
 CREATE TABLE role_permissions
 (
     role_id       BIGINT NOT NULL,
@@ -176,7 +175,6 @@ CREATE TABLE role_permissions
             ON UPDATE CASCADE
 );
 
-
 CREATE TABLE Customer
 (
     id          BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -186,7 +184,7 @@ CREATE TABLE Customer
     gender      ENUM('MALE', 'FEMALE', 'OTHER'),
     dob         DATE,
     address     VARCHAR(255),
-    id_card     VARCHAR(20)  NOT NULL,
+    id_card     VARCHAR(20), -- CMND/CCCD
     nationality VARCHAR(50),
     note        TEXT,
     created_at  DATETIME DEFAULT CURRENT_TIMESTAMP,
