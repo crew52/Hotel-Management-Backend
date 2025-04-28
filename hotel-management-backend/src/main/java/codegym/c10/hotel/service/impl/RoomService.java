@@ -8,6 +8,7 @@ import codegym.c10.hotel.repository.IRoomCategoryRepository;
 import codegym.c10.hotel.repository.IRoomRepository;
 import codegym.c10.hotel.service.IRoomService;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -15,6 +16,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+/**
+ * Service implementation for managing Room entities.
+ */
 @Service
 public class RoomService implements IRoomService {
     @Autowired
@@ -23,8 +27,14 @@ public class RoomService implements IRoomService {
     @Autowired
     private IRoomCategoryRepository roomCategoryRepository;
 
+    /**
+     * Updates an existing room with new information.
+     *
+     * @param room the room data to update
+     * @return the updated Room entity
+     * @throws EntityNotFoundException if the room or its category is not found
+     */
     @Override
-
     public Room update(Room room) {
         // Kiểm tra xem phòng có tồn tại không
         Room existingRoom = roomRepository.findById(room.getId())
@@ -53,11 +63,26 @@ public class RoomService implements IRoomService {
         return roomRepository.save(existingRoom);
     }
 
+    /**
+     * Retrieves a paginated list of rooms that are not marked as deleted.
+     *
+     * @param pageable the pagination information
+     * @return a page of rooms
+     */
     @Override
     public Page<Room> findAllByDeletedFalse(Pageable pageable) {
         return roomRepository.findAllByDeletedFalse(pageable);
     }
 
+    /**
+     * Searches for rooms based on keyword, status, and floor with pagination.
+     *
+     * @param keyword the keyword to search for (can be null)
+     * @param status  the room status to filter by (can be null)
+     * @param floor   the floor number to filter by (can be null)
+     * @param pageable the pagination information
+     * @return a page of rooms matching the search criteria
+     */
     @Override
     public Page<Room> advancedSearch(String keyword, RoomStatus status, Integer floor, Pageable pageable) {
         return roomRepository.advancedSearch(
@@ -68,17 +93,35 @@ public class RoomService implements IRoomService {
         );
     }
 
+    /**
+     * Finds an available, clean, and non-deleted room by ID.
+     *
+     * @param id the ID of the room
+     * @return an Optional containing the room if found, or empty otherwise
+     */
     @Override
     public Optional<Room> findByIdAndStatusAndIsCleanTrueAndDeletedFalse(Long id) {
         return roomRepository.findByIdAndStatusAndIsCleanTrueAndDeletedFalse(id, RoomStatus.AVAILABLE);
     }
 
+    /**
+     * Retrieves all rooms. (Not yet implemented.)
+     *
+     * @return an Iterable of all rooms
+     */
     @Override
     public Iterable<Room> findAll() {
         return null;
         //TODO
     }
 
+    /**
+     * Saves a new room after verifying the room category exists.
+     *
+     * @param room the room to save
+     * @return the saved Room entity
+     * @throws EntityNotFoundException if the room category does not exist
+     */
     @Override
     public Room save(Room room) {
         Long categoryId = room.getRoomCategory().getId();
@@ -91,21 +134,37 @@ public class RoomService implements IRoomService {
         return roomRepository.save(room);
     }
 
+    /**
+     * Finds a room by ID, ensuring it is not marked as deleted.
+     *
+     * @param id the ID of the room
+     * @return an Optional containing the room if found, or empty otherwise
+     */
     @Override
     public Optional<Room> findById(Long id) {
         return roomRepository.findByIdAndDeletedFalse(id);
     }
 
+    /**
+     * Deletes a room by marking it as deleted if its status allows.
+     *
+     * @param id the ID of the room to delete
+     * @throws EntityNotFoundException if the room does not exist
+     * @throws IllegalStateException if the room is not in a deletable status
+     */
     @Override
+    @Transactional
     public void remove(Long id) {
-        Optional<Room> room = roomRepository.findById(id);
+        Room room = roomRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Room not found with id: " + id));
 
-        if (room.isPresent()) {
-            Room room1 = room.get();
-            room1.setDeleted(true);
-            roomRepository.save(room1);
-        } else {
-            throw new EntityNotFoundException("Room not found with id: " + id);
+        // Only allow deleting if the room is AVAILABLE or under MAINTENANCE
+        if (room.getStatus() != RoomStatus.AVAILABLE && room.getStatus() != RoomStatus.MAINTENANCE) {
+            throw new IllegalStateException("Cannot delete a room that is currently in use.");
         }
+
+        // Soft delete the room
+        room.setDeleted(true);
+        roomRepository.save(room);
     }
 }

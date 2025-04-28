@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 /**
  * RoomController is a REST controller responsible for managing room-related operations
@@ -113,16 +115,22 @@ public class RoomController {
      * Deletes a room by marking it as deleted.
      *
      * @param id the ID of the room to delete
-     * @return 204 No Content if successfully deleted, or 404 Not Found if the room does not exist
+     * @return 204 No Content if successfully deleted,
+     *         404 Not Found if the room does not exist,
+     *         400 Bad Request if the room cannot be deleted due to its status
      */
     @DeleteMapping("/{id}/delete")
     @PreAuthorize("@securityService.hasPermission('DELETE_ROOM')")
-    public ResponseEntity<Void> removeRoom(@PathVariable Long id) {
+    public ResponseEntity<?> removeRoom(@PathVariable Long id) {
         try {
             roomService.remove(id);
             return ResponseEntity.noContent().build();
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message","Room not found with id: " + id));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(Map.of("message", e.getMessage()));
         }
     }
 
