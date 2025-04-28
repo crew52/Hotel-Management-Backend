@@ -201,6 +201,7 @@ CREATE TABLE Booking
     booking_time   DATETIME       DEFAULT CURRENT_TIMESTAMP,
     checkin_time   DATETIME,
     checkout_time  DATETIME,
+    note           TEXT,
     booking_status ENUM('PENDING', 'CHECKED_IN', 'CHECKED_OUT', 'CANCELLED') DEFAULT 'PENDING',
     created_by     BIGINT,
     created_at     DATETIME       DEFAULT CURRENT_TIMESTAMP,

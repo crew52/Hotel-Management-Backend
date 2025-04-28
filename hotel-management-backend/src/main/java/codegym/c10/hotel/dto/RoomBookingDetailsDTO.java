@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 public class RoomBookingDetailsDTO {
     private Long roomId;
     private String roomCategoryName;
+    private Integer adultCount;
+    private Integer childCount;
     private RentType rentType;
     private BigDecimal price;
     private BigDecimal priceTotal;

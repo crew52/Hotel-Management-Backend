@@ -11,8 +11,9 @@ public class BookingResponseDTO {
     private Long bookingId;
     private String customerName;
     private String customerPhone;
-    private String customerNote;
+    private String note;
     private BigDecimal paidAmount;
+    private BigDecimal totalAmount;
     private BookingStatus bookingStatus;
     private List<RoomBookingDetailsDTO> rooms;
     private LocalDateTime bookingCreatedAt;

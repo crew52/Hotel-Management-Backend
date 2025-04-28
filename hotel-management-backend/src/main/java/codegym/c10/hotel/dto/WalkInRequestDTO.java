@@ -11,11 +11,8 @@ import java.util.List;
 @Data
 public class WalkInRequestDTO {
 
-    @Size(max = 100)
-    private String customerName;
-
-    @Size(max = 20)
-    private String customerPhone;
+    @NotNull(message = "Customer không được để trống.")
+    private Long customerId;
 
     private String note;
 
