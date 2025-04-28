@@ -1,6 +1,5 @@
 package codegym.c10.hotel.entity;
 
-
 import codegym.c10.hotel.eNum.BookingStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -22,16 +21,9 @@ public class Booking {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Size(max = 100)
-    @Column(name = "customer_name")
-    private String customerName;
-
-    @Size(max = 20)
-    @Column(name = "customer_phone")
-    private String customerPhone;
-
-    @Column(name = "customer_note", columnDefinition = "TEXT")
-    private String customerNote;
+    @ManyToOne
+    @JoinColumn(name = "customer_id", foreignKey = @ForeignKey(name = "fk_booking_customer"))
+    private Customer customer;
 
     @DecimalMin("0.00")
     @Column(name = "total_amount", precision = 10, scale = 2)
@@ -82,6 +74,5 @@ public class Booking {
     protected void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
-
-    // getters & setters
 }
+

@@ -51,6 +51,12 @@ public class BookingDetail {
     @Enumerated(EnumType.STRING)
     private BookingDetailStatus status = BookingDetailStatus.BOOKED;
 
+    @Column(name = "adult_count", nullable = false)
+    private Integer adultCount = 1;   // số lượng người lớn, mặc định 1
+
+    @Column(name = "child_count", nullable = false)
+    private Integer childCount = 0;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
