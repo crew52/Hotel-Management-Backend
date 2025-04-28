@@ -221,4 +221,48 @@ public class RoomController {
             return null;
         }
     }
+
+    /**
+     * PATCH method to update the room's status.
+     * @param id - The ID of the room to update.
+     * @param status - The new status of the room.
+     * @return ResponseEntity containing the updated room or error message.
+     */
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Room> updateRoomStatus(@PathVariable Long id, @RequestParam RoomStatus status) {
+        try {
+            Room updatedRoom = roomService.updateRoomStatus(id, status);
+            return ResponseEntity.ok(updatedRoom);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
+    /**
+     * PATCH method to update the room's cleaning status.
+     * The cleaning status will be toggled (if it's true, it will become false, and vice versa).
+     * @param id - The ID of the room to update.
+     * @return ResponseEntity containing the updated room or error message.
+     */
+    @PatchMapping("/{id}/is_clean")
+    public ResponseEntity<Room> updateRoomCleaningStatus(@PathVariable Long id) {
+        try {
+            Room updatedRoom = roomService.updateRoomCleaningStatus(id);
+            return ResponseEntity.ok(updatedRoom);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
+        }
+    }
+
 }

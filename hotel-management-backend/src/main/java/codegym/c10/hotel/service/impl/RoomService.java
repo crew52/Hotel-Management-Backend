@@ -167,4 +167,38 @@ public class RoomService implements IRoomService {
         room.setDeleted(true);
         roomRepository.save(room);
     }
+
+    /**
+     * Updates the status of the room identified by its ID.
+     * This method allows you to change the status of a room.
+     *
+     * @param id the ID of the room to update
+     * @param status the new status to assign to the room
+     * @return the updated room with the new status
+     * @throws EntityNotFoundException if no room is found with the given ID
+     */
+    @Override
+    @Transactional
+    public Room updateRoomStatus(Long id, RoomStatus status) {
+        Room room = roomRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new EntityNotFoundException("Room not found with id: " + id));
+        room.setStatus(status);
+        return roomRepository.save(room);
+    }
+
+    /**
+     * Toggles the cleaning status of the room identified by its ID.
+     * This method switches the room's cleaning status from clean to dirty, or vice versa.
+     *
+     * @param id the ID of the room to update
+     * @return the updated room with the new cleaning status
+     * @throws EntityNotFoundException if no room is found with the given ID
+     */
+    @Override
+    public Room updateRoomCleaningStatus(Long id) {
+        Room room = roomRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Room not found with id: " + id));
+        room.setIsClean(!room.getIsClean());
+        return roomRepository.save(room);
+    }
 }
