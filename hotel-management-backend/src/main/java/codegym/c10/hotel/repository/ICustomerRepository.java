@@ -10,4 +10,8 @@ import java.util.Optional;
 public interface ICustomerRepository extends JpaRepository<Customer, Long> {
     Page<Customer> findAllByDeletedFalse(Pageable pageable);
     Optional<Customer> findByIdAndDeletedFalse(Long id);
+
+    boolean existsByEmailAndIdNot(String email, Long id);
+    boolean existsByPhoneAndIdNot(String phone, Long id);
+    boolean existsByIdCardAndIdNot(String idCard, Long id);
 }
