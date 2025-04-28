@@ -1,6 +1,7 @@
 package codegym.c10.hotel.dto;
 
 import codegym.c10.hotel.eNum.RentType;
+import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -13,6 +14,10 @@ public class RoomBookingRequestDTO {
 
     @NotNull(message = "Thời gian check-in không được để trống.")
     private LocalDateTime checkinTime;
+
+    private Integer adultCount = 1;
+
+    private Integer childCount = 0;
 
     @NotNull(message = "Loại thuê không được để trống.")
     private RentType rentType;

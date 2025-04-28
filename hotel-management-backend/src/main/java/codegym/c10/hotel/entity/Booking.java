@@ -36,12 +36,6 @@ public class Booking {
     @Column(name = "booking_time")
     private LocalDateTime bookingTime;
 
-    @Column(name = "checkin_time")
-    private LocalDateTime checkinTime;
-
-    @Column(name = "checkout_time")
-    private LocalDateTime checkoutTime;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "booking_status")
     private BookingStatus bookingStatus = BookingStatus.PENDING;
@@ -49,6 +43,9 @@ public class Booking {
     @ManyToOne
     @JoinColumn(name = "created_by", foreignKey = @ForeignKey(name = "fk_booking_creator"))
     private User createdBy;
+
+    @Column(columnDefinition = "TEXT")
+    private String note;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
