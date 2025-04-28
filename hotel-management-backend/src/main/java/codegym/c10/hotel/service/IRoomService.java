@@ -12,4 +12,5 @@ public interface IRoomService extends IGenerateService<Room>{
     Page<Room> findAllByDeletedFalse(Pageable pageable);
     Page<Room> advancedSearch(String keyword, RoomStatus status, Integer floor, Pageable pageable);
     Optional<Room> findByIdAndStatusAndIsCleanTrueAndDeletedFalse(Long id);
+    Room updateRoomStatus(Long id, RoomStatus status);
 }

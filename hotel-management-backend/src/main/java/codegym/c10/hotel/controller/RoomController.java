@@ -221,4 +221,21 @@ public class RoomController {
             return null;
         }
     }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Room> updateRoomStatus(@PathVariable Long id, @RequestParam RoomStatus status) {
+        try {
+            Room updatedRoom = roomService.updateRoomStatus(id, status);
+            return ResponseEntity.ok(updatedRoom);  // Trả về phòng đã được cập nhật nếu thành công
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null);  // Trả về 404 nếu phòng không tồn tại
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(null);  // Trả về 400 nếu trạng thái phòng không hợp lệ
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);  // Trả về 500 nếu có lỗi không mong muốn
+        }
+    }
 }

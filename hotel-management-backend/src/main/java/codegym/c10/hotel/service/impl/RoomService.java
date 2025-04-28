@@ -167,4 +167,13 @@ public class RoomService implements IRoomService {
         room.setDeleted(true);
         roomRepository.save(room);
     }
+
+    @Override
+    @Transactional
+    public Room updateRoomStatus(Long id, RoomStatus status) {
+        Room room = roomRepository.findByIdAndDeletedFalse(id)
+                .orElseThrow(() -> new EntityNotFoundException("Room not found with id: " + id));
+        room.setStatus(status);
+        return roomRepository.save(room);
+    }
 }
