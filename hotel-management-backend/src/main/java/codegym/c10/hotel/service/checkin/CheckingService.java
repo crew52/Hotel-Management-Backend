@@ -3,6 +3,7 @@ package codegym.c10.hotel.service.checkin;
 import codegym.c10.hotel.dto.*;
 import codegym.c10.hotel.eNum.*;
 import codegym.c10.hotel.entity.*;
+import codegym.c10.hotel.exception.BookingException;
 import codegym.c10.hotel.exception.CustomerNotFoundException;
 import codegym.c10.hotel.exception.RoomNotAvailableException;
 import codegym.c10.hotel.repository.*;
@@ -46,7 +47,7 @@ public class CheckingService {
 
     private User getUserById(Long userId) {
         return userService.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+                .orElseThrow(() -> new BookingException("User with ID " + userId + " not found."));
     }
 
     private Booking createNewBooking(WalkInRequestDTO walkInRequestDTO, User user) {
@@ -64,37 +65,35 @@ public class CheckingService {
         return booking;
     }
 
-
     private List<RoomBookingDetailsDTO> processRoomBookings(List<RoomBookingRequestDTO> roomRequests, Booking booking) {
         List<RoomBookingDetailsDTO> roomDetailsList = new ArrayList<>();
-        BigDecimal totalAmount = BigDecimal.ZERO; // Khởi tạo tổng tiền
+        BigDecimal totalAmount = BigDecimal.ZERO;
 
         for (RoomBookingRequestDTO roomRequest : roomRequests) {
-            LocalDateTime checkinTime = roomRequest.getCheckinTime();
-            // Kiểm tra nếu thời gian checkin là quá khứ
-            if (checkinTime.isBefore(LocalDateTime.now())) {
-                throw new IllegalArgumentException("Check-in time cannot be in the past.");
-            }
-            LocalDateTime checkoutTime = calculateCheckoutTime(roomRequest.getRentType(), roomRequest.getDuration(), checkinTime);
+            validateCheckinTime(roomRequest.getCheckinTime());
 
-            Room room = validateRoomAvailability(roomRequest.getRoomId(), checkinTime, checkoutTime);
+            LocalDateTime checkoutTime = calculateCheckoutTime(roomRequest.getRentType(), roomRequest.getDuration(), roomRequest.getCheckinTime());
+            Room room = validateRoomAvailability(roomRequest.getRoomId(), roomRequest.getCheckinTime(), checkoutTime);
 
             BookingDetail bookingDetails = createBookingDetail(roomRequest, room, booking);
             bookingDetailsRepository.save(bookingDetails);
 
-            // Convert sang DTO để trả về
             RoomBookingDetailsDTO roomBookingDetailsDTO = mapToRoomBookingDetailsDTO(room, bookingDetails, roomRequest);
             roomDetailsList.add(roomBookingDetailsDTO);
 
-            // Cộng dồn tiền ngay tại đây
             totalAmount = totalAmount.add(bookingDetails.getPrice());
         }
 
-        // Sau khi lặp hết thì set tổng tiền vào booking
         booking.setTotalAmount(totalAmount);
         bookingRepository.save(booking);
 
         return roomDetailsList;
+    }
+
+    private void validateCheckinTime(LocalDateTime checkinTime) {
+        if (checkinTime.isBefore(LocalDateTime.now())) {
+            throw new IllegalArgumentException("Check-in time cannot be in the past.");
+        }
     }
 
     private Room validateRoomAvailability(Long roomId, LocalDateTime checkinTime, LocalDateTime checkoutTime) {

@@ -2,9 +2,9 @@ package codegym.c10.hotel.controller;
 
 import codegym.c10.hotel.dto.BookingResponseDTO;
 import codegym.c10.hotel.dto.WalkInRequestDTO;
-import codegym.c10.hotel.exception.CustomerNotFoundException;
 import codegym.c10.hotel.exception.RoomNotAvailableException;
 import codegym.c10.hotel.service.AuthenticatedUserService;
+//import codegym.c10.hotel.service.checkin.CheckingService;
 import codegym.c10.hotel.service.checkin.CheckingService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -44,7 +44,7 @@ public class CheckinController {
             response.put("booking", bookingResponseDTO);
 
             return ResponseEntity.ok(response);
-        } catch (RoomNotAvailableException | CustomerNotFoundException e) {
+        } catch (RoomNotAvailableException e) {
             response.put("status", e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
         } catch (Exception e) {
@@ -54,7 +54,5 @@ public class CheckinController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
     }
-
-
 }
 
