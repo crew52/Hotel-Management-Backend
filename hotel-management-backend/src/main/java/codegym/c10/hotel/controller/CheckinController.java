@@ -2,10 +2,12 @@ package codegym.c10.hotel.controller;
 
 import codegym.c10.hotel.dto.BookingResponseDTO;
 import codegym.c10.hotel.dto.WalkInRequestDTO;
+import codegym.c10.hotel.entity.Booking;
 import codegym.c10.hotel.exception.CustomerNotFoundException;
 import codegym.c10.hotel.exception.RoomNotAvailableException;
 import codegym.c10.hotel.service.AuthenticatedUserService;
 //import codegym.c10.hotel.service.checkin.CheckingService;
+import codegym.c10.hotel.service.booking.BookingServiceImpl;
 import codegym.c10.hotel.service.checkin.CheckingService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -13,20 +15,21 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/checkins")
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class CheckinController {
     @Autowired
     private CheckingService checkingService;
+
+    @Autowired
+    private BookingServiceImpl bookingService;
 
     @Autowired
     private AuthenticatedUserService authenticatedUserService;
@@ -54,7 +57,7 @@ public class CheckinController {
      * @return {@link ResponseEntity} chứa trạng thái booking và dữ liệu booking chi tiết nếu thành công;
      *         hoặc thông tin lỗi nếu thất bại.
      */
-    @PostMapping("/walkin")
+    @PostMapping("/checkins/walkin")
     public ResponseEntity<Map<String, Object>> checkinWalking(
             @Valid @RequestBody WalkInRequestDTO walkInRequestDTO,
             HttpServletRequest request) {
@@ -76,6 +79,17 @@ public class CheckinController {
             response.put("status", "An unexpected error occurred.");
             response.put("errorMessage", e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+        }
+    }
+
+    @GetMapping("/reservations/{id}")
+    public ResponseEntity<BookingResponseDTO> getBooking(@PathVariable Long id) {
+        BookingResponseDTO bookingResponse = bookingService.getBookingResponse(id);
+
+        if (bookingResponse != null) {
+            return ResponseEntity.ok(bookingResponse);
+        } else {
+            return ResponseEntity.notFound().build();
         }
     }
 }
