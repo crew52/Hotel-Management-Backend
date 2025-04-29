@@ -4,10 +4,13 @@ import codegym.c10.hotel.dto.CheckoutRequestDTO;
 import codegym.c10.hotel.dto.FeeResponseDTO;
 import codegym.c10.hotel.dto.InvoiceResponseDTO;
 import codegym.c10.hotel.dto.RoomInvoiceDTO;
+import codegym.c10.hotel.eNum.BookingDetailStatus;
+import codegym.c10.hotel.eNum.BookingStatus;
 import codegym.c10.hotel.eNum.RoomStatus;
 import codegym.c10.hotel.entity.Booking;
 import codegym.c10.hotel.entity.BookingDetail;
 import codegym.c10.hotel.entity.Room;
+import codegym.c10.hotel.repository.IBookingDetailsRepository;
 import codegym.c10.hotel.repository.IBookingRepository;
 import codegym.c10.hotel.repository.IRoomRepository;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,27 +24,67 @@ import java.util.List;
 
 @Service
 public class CheckoutService {
+        @Autowired
+        private IRoomRepository roomRepository;
 
-    @Autowired
-    private IRoomRepository roomRepository;
+        @Autowired
+        private IBookingRepository bookingRepository;
 
-    @Autowired
-    private IBookingRepository bookingRepository;
+        @Autowired
+        private IBookingDetailsRepository bookingDetailsRepository;
 
     @Transactional
-    public void processCheckout(CheckoutRequestDTO requestDTO) {
-        Booking booking = bookingRepository.findById(requestDTO.getBookingId())
-                .orElseThrow(() -> new RuntimeException("Booking không tồn tại"));
-        booking.setCheckoutTime(LocalDateTime.now());
-        bookingRepository.save(booking);
+    public String processCheckout(CheckoutRequestDTO requestDTO) {
+        try {
+            // 1. Xử lý Booking
+            Booking booking = bookingRepository.findById(requestDTO.getBookingId())
+                    .orElseThrow(() -> new RuntimeException("Booking không tồn tại"));
 
-        Room room = roomRepository.findById(requestDTO.getRoomId())
-                .orElseThrow(() -> new RuntimeException("Room không tồn tại"));
-        room.setIsClean(requestDTO.getIsClean());
-        room.setStatus(RoomStatus.AVAILABLE);
-        roomRepository.save(room);
+            booking.setBookingStatus(BookingStatus.CHECKED_OUT);
+            bookingRepository.save(booking);
+
+            // 2. Xử lý Room
+            Room room = roomRepository.findById(requestDTO.getRoomId())
+                    .orElseThrow(() -> new RuntimeException("Room không tồn tại"));
+
+            room.setIsClean(requestDTO.getIsClean());
+            room.setStatus(RoomStatus.AVAILABLE);
+            roomRepository.save(room);
+
+            // 3. Xử lý BookingDetail
+            BookingDetail bookingDetail = booking.getBookingDetails().stream()
+                    .filter(detail -> detail.getRoom().getId().equals(requestDTO.getRoomId()))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Không tìm thấy chi tiết đặt phòng"));
+
+            // Lưu trạng thái cũ để kiểm tra
+            BookingDetailStatus oldStatus = bookingDetail.getStatus();
+
+            // Cập nhật trạng thái mới
+            bookingDetail.setStatus(BookingDetailStatus.COMPLETED);
+            BookingDetail savedBookingDetail = bookingDetailsRepository.save(bookingDetail);
+
+            // Kiểm tra xem việc cập nhật có thành công không
+            if (savedBookingDetail.getStatus() != BookingDetailStatus.COMPLETED) {
+                throw new RuntimeException("Không thể cập nhật trạng thái BookingDetail");
+            }
+
+            // 4. Tạo thông báo chi tiết
+            return String.format(
+                    "Checkout thành công!\n" +
+                            "- Phòng %s đã được trả\n" +
+                            "- Trạng thái dọn dẹp: %s\n" +
+                            "- Booking Detail: %s → %s",
+                    room.getNote(),
+                    requestDTO.getIsClean() ? "Đã dọn dẹp" : "Chưa dọn dẹp",
+                    oldStatus,
+                    savedBookingDetail.getStatus()
+            );
+
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi checkout: " + e.getMessage());
+        }
     }
-
 
 
 
