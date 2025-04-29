@@ -1,5 +1,6 @@
 package codegym.c10.hotel.controller;
 
+import codegym.c10.hotel.dto.CheckoutDueSoonDTO;
 import codegym.c10.hotel.dto.CheckoutRequestDTO;
 import codegym.c10.hotel.dto.FeeResponseDTO;
 import codegym.c10.hotel.dto.InvoiceResponseDTO;
@@ -53,4 +54,6 @@ public class CheckoutController {
         InvoiceResponseDTO invoice = checkoutService.getInvoice(bookingId);
         return ResponseEntity.ok(invoice);
     }
+
+
 }
