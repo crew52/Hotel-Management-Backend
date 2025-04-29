@@ -1,9 +1,6 @@
 package codegym.c10.hotel.service.checkout;
 
-import codegym.c10.hotel.dto.CheckoutRequestDTO;
-import codegym.c10.hotel.dto.FeeResponseDTO;
-import codegym.c10.hotel.dto.InvoiceResponseDTO;
-import codegym.c10.hotel.dto.RoomInvoiceDTO;
+import codegym.c10.hotel.dto.*;
 import codegym.c10.hotel.eNum.BookingDetailStatus;
 import codegym.c10.hotel.eNum.BookingStatus;
 import codegym.c10.hotel.eNum.RoomStatus;
@@ -17,8 +14,10 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class CheckoutService {
@@ -213,5 +212,64 @@ public class CheckoutService {
         invoice.setTotalFee(roomFee);             // Tổng = phí phòng + phí dịch vụ + phụ phí
 
         return invoice;
+    }
+
+
+    public List<CheckoutDueSoonDTO> findRoomsCheckoutDueSoon(Integer minutesThreshold) {
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime threshold = now.plusMinutes(minutesThreshold);
+
+        List<BookingDetail> dueSoonDetails = bookingDetailsRepository.findCheckoutDueSoon(
+                now,
+                threshold,
+                BookingDetailStatus.IN_USE
+        );
+
+        return dueSoonDetails.stream().map(detail -> {
+            CheckoutDueSoonDTO dto = new CheckoutDueSoonDTO();
+
+            // Set thông tin phòng
+            Room room = detail.getRoom();
+            dto.setRoomId(room.getId());
+            dto.setRoomName(room.getNote());
+            dto.setFloor(room.getFloor());
+            dto.setRoomCategory(room.getRoomCategory().getName());
+            dto.setRoomStatus(room.getStatus());
+            dto.setIsClean(room.getIsClean());
+
+            // Set thông tin booking
+            Booking booking = detail.getBooking();
+            dto.setBookingId(booking.getId());
+            dto.setBookingTime(booking.getBookingTime());
+            dto.setBookingStatus(booking.getBookingStatus());
+            dto.setTotalAmount(booking.getTotalAmount());
+            dto.setPaidAmount(booking.getPaidAmount());
+            dto.setRemainingAmount(booking.getTotalAmount().subtract(booking.getPaidAmount()));
+
+            // Set thông tin booking detail
+            dto.setBookingDetailId(detail.getId());
+            dto.setRentType(detail.getRentType().name());
+            dto.setDuration(detail.getDuration());
+            dto.setPrice(detail.getPrice());
+            dto.setCheckinTime(detail.getCheckinTime());
+            dto.setCheckoutTime(detail.getCheckoutTime());
+            dto.setStatus(detail.getStatus());
+            dto.setAdultCount(detail.getAdultCount());
+            dto.setChildCount(detail.getChildCount());
+
+            // Tính thời gian còn lại (phút)
+            long remainingMinutes = ChronoUnit.MINUTES.between(now, detail.getCheckoutTime());
+            dto.setRemainingMinutes(remainingMinutes);
+
+            // Set thông tin khách hàng
+            Customer customer = booking.getCustomer();
+            dto.setCustomerId(customer.getId());
+            dto.setCustomerName(customer.getFullName());
+            dto.setCustomerPhone(customer.getPhone());
+            dto.setCustomerEmail(customer.getEmail());
+            dto.setCustomerAddress(customer.getAddress());
+
+            return dto;
+        }).collect(Collectors.toList());
     }
 }
