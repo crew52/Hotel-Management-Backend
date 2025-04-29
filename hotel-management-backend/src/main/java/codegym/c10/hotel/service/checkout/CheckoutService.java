@@ -145,34 +145,72 @@ public class CheckoutService {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking không tồn tại"));
 
+        InvoiceResponseDTO invoice = new InvoiceResponseDTO();
+
+        // 1. Set thông tin booking
+        invoice.setBookingId(booking.getId());
+        invoice.setBookingTime(booking.getBookingTime());
+        invoice.setBookingStatus(booking.getBookingStatus());
+        invoice.setNote(booking.getNote());
+
+        // 2. Set thông tin khách hàng
+        Customer customer = booking.getCustomer();
+        invoice.setCustomerId(customer.getId());
+        invoice.setCustomerName(customer.getFullName());
+        invoice.setCustomerPhone(customer.getPhone());
+        invoice.setCustomerEmail(customer.getEmail());
+        invoice.setCustomerAddress(customer.getAddress());
+
+        // 3. Set thông tin thanh toán
+        invoice.setTotalAmount(booking.getTotalAmount());
+        invoice.setPaidAmount(booking.getPaidAmount());
+        invoice.setRemainingAmount(booking.getTotalAmount().subtract(booking.getPaidAmount()));
+
+        // 4. Set thông tin người tạo
+        User createdBy = booking.getCreatedBy();
+        invoice.setCreatedById(createdBy.getId());
+        invoice.setCreatedByName(createdBy.getUsername());
+        invoice.setCreatedAt(booking.getCreatedAt());
+
+        // 5. Xử lý chi tiết các phòng
         List<RoomInvoiceDTO> roomList = new ArrayList<>();
         BigDecimal roomFee = BigDecimal.ZERO;
 
         for (BookingDetail detail : booking.getBookingDetails()) {
             RoomInvoiceDTO roomDTO = new RoomInvoiceDTO();
-            roomDTO.setRoomId(detail.getRoom().getId());
-            roomDTO.setRoomName(detail.getRoom().getNote());
+
+            // Thông tin phòng
+            Room room = detail.getRoom();
+            roomDTO.setRoomId(room.getId());
+            roomDTO.setRoomName(room.getNote());
+            roomDTO.setFloor(room.getFloor());
+            roomDTO.setRoomCategoryName(room.getRoomCategory().getName());
+
+            // Thông tin thuê phòng
             roomDTO.setRentType(detail.getRentType().name());
             roomDTO.setDuration(detail.getDuration());
             roomDTO.setUnitPrice(detail.getPrice());
+            roomDTO.setCheckinTime(detail.getCheckinTime());
+            roomDTO.setCheckoutTime(detail.getCheckoutTime());
+
+            // Tính tiền phòng
             BigDecimal total = detail.getPrice().multiply(BigDecimal.valueOf(detail.getDuration()));
             roomDTO.setTotalFee(total);
-
             roomFee = roomFee.add(total);
+
+            // Thông tin khách trong phòng
+            roomDTO.setAdultCount(detail.getAdultCount());
+            roomDTO.setChildCount(detail.getChildCount());
+
             roomList.add(roomDTO);
         }
 
-        BigDecimal serviceFee = BigDecimal.ZERO;
-        BigDecimal surcharge = BigDecimal.ZERO;
-        BigDecimal totalFee = roomFee.add(serviceFee).add(surcharge);
-
-        InvoiceResponseDTO invoice = new InvoiceResponseDTO();
-        invoice.setBookingId(bookingId);
+        // 6. Set tổng phí
         invoice.setRooms(roomList);
         invoice.setRoomFee(roomFee);
-        invoice.setServiceFee(serviceFee);
-        invoice.setSurcharge(surcharge);
-        invoice.setTotalFee(totalFee);
+        invoice.setServiceFee(BigDecimal.ZERO);   // Có thể tính thêm nếu có
+        invoice.setSurcharge(BigDecimal.ZERO);   // Có thể tính thêm nếu có
+        invoice.setTotalFee(roomFee);             // Tổng = phí phòng + phí dịch vụ + phụ phí
 
         return invoice;
     }

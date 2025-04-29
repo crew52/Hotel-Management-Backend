@@ -7,9 +7,7 @@ import codegym.c10.hotel.dto.RoomInvoiceDTO;
 import codegym.c10.hotel.eNum.BookingDetailStatus;
 import codegym.c10.hotel.eNum.BookingStatus;
 import codegym.c10.hotel.eNum.RoomStatus;
-import codegym.c10.hotel.entity.Booking;
-import codegym.c10.hotel.entity.BookingDetail;
-import codegym.c10.hotel.entity.Room;
+import codegym.c10.hotel.entity.*;
 import codegym.c10.hotel.repository.IBookingDetailsRepository;
 import codegym.c10.hotel.repository.IBookingRepository;
 import codegym.c10.hotel.repository.IRoomRepository;
@@ -93,20 +91,52 @@ public class CheckoutService {
                 .orElseThrow(() -> new RuntimeException("Booking không tồn tại"));
 
         List<FeeResponseDTO> feeList = new ArrayList<>();
-        for (BookingDetail detail : booking.getBookingDetails()) {
-            String rentType = detail.getRentType().name();
-            int duration = detail.getDuration();
-            java.math.BigDecimal unitPrice = detail.getPrice();
-            java.math.BigDecimal totalFee = unitPrice.multiply(java.math.BigDecimal.valueOf(duration));
 
-            feeList.add(new FeeResponseDTO(
-                    detail.getId(),
-                    rentType,
-                    duration,
-                    unitPrice,
-                    totalFee
-            ));
+        for (BookingDetail detail : booking.getBookingDetails()) {
+            FeeResponseDTO feeDTO = new FeeResponseDTO();
+
+            // 1. Set thông tin BookingDetail
+            feeDTO.setBookingDetailId(detail.getId());
+            feeDTO.setRentType(detail.getRentType().name());
+            feeDTO.setDuration(detail.getDuration());
+            feeDTO.setUnitPrice(detail.getPrice());
+            feeDTO.setTotalFee(detail.getPrice().multiply(BigDecimal.valueOf(detail.getDuration())));
+            feeDTO.setCheckinTime(detail.getCheckinTime());
+            feeDTO.setCheckoutTime(detail.getCheckoutTime());
+            feeDTO.setStatus(detail.getStatus());
+            feeDTO.setAdultCount(detail.getAdultCount());
+            feeDTO.setChildCount(detail.getChildCount());
+
+            // 2. Set thông tin Room
+            Room room = detail.getRoom();
+            feeDTO.setRoomId(room.getId());
+            feeDTO.setRoomName(room.getNote());
+            feeDTO.setFloor(room.getFloor());
+
+            // 3. Set thông tin RoomCategory
+            RoomCategory category = room.getRoomCategory();
+            feeDTO.setRoomCategoryName(category.getName());
+            feeDTO.setHourlyPrice(category.getHourlyPrice());
+            feeDTO.setDailyPrice(category.getDailyPrice());
+            feeDTO.setOvernightPrice(category.getOvernightPrice());
+
+            // 4. Set thông tin Customer
+            Customer customer = booking.getCustomer();
+            feeDTO.setCustomerId(customer.getId());
+            feeDTO.setCustomerName(customer.getFullName());
+            feeDTO.setCustomerPhone(customer.getPhone());
+            feeDTO.setCustomerEmail(customer.getEmail());
+
+            // 5. Set thông tin Booking
+            feeDTO.setBookingId(booking.getId());
+            feeDTO.setBookingTime(booking.getBookingTime());
+            feeDTO.setTotalAmount(booking.getTotalAmount());
+            feeDTO.setPaidAmount(booking.getPaidAmount());
+            feeDTO.setBookingStatus(booking.getBookingStatus().name());
+
+            feeList.add(feeDTO);
         }
+
         return feeList;
     }
 
