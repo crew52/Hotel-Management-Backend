@@ -1,7 +1,10 @@
 package codegym.c10.hotel.service.booking;
 
 import codegym.c10.hotel.dto.BookingResponseDTO;
+import codegym.c10.hotel.dto.LateCheckinStatusDTO;
 import codegym.c10.hotel.dto.RoomBookingDetailsDTO;
+import codegym.c10.hotel.dto.RoomLateCheckinStatusDTO;
+import codegym.c10.hotel.eNum.BookingDetailStatus;
 import codegym.c10.hotel.eNum.RentType;
 import codegym.c10.hotel.entity.*;
 import codegym.c10.hotel.repository.IBookingRepository;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -75,5 +79,52 @@ public class BookingServiceImpl implements IBookingService{
     @Override
     public Optional<Booking> findByIdAndDeletedFalse(Long id) {
         return bookingRepository.findByIdAndDeletedFalse(id);
+    }
+
+    @Override
+    public LateCheckinStatusDTO getLateCheckinStatus(Long id) {
+        Optional<Booking> bookingOpt = bookingRepository.findByIdAndDeletedFalse(id);
+        if (bookingOpt.isEmpty()) {
+            return null;
+        }
+
+        Booking booking = bookingOpt.get();
+        LocalDateTime now = LocalDateTime.now();
+
+        List<BookingDetail> bookedRooms = booking.getBookingDetails().stream()
+                .filter(detail -> detail.getStatus() == BookingDetailStatus.BOOKED)
+                .collect(Collectors.toList());
+
+        boolean isLate = bookedRooms.stream()
+                .anyMatch(detail -> {
+                    LocalDateTime checkinTime = detail.getCheckinTime();
+                    return checkinTime != null && now.isAfter(checkinTime);
+                });
+
+        LocalDateTime earliestExpectedCheckin = bookedRooms.stream()
+                .map(BookingDetail::getCheckinTime)
+                .filter(Objects::nonNull)
+                .min(LocalDateTime::compareTo)
+                .orElse(null);
+
+        List<RoomLateCheckinStatusDTO> roomStatuses = booking.getBookingDetails().stream()
+                .map(detail -> {
+                    RoomLateCheckinStatusDTO dto = new RoomLateCheckinStatusDTO();
+                    dto.setRoomId(detail.getRoom().getId());
+                    dto.setExpectedCheckinTime(detail.getCheckinTime());
+                    dto.setStatus(detail.getStatus());
+                    dto.setLate(detail.getCheckinTime() != null && now.isAfter(detail.getCheckinTime()) &&
+                            detail.getStatus() == BookingDetailStatus.BOOKED);
+                    return dto;
+                }).collect(Collectors.toList());
+
+        LateCheckinStatusDTO dto = new LateCheckinStatusDTO();
+        dto.setBookingId(booking.getId());
+        dto.setLateCheckin(isLate);
+        dto.setEarliestExpectedCheckin(earliestExpectedCheckin);
+        dto.setCurrentTime(now);
+        dto.setRoomStatuses(roomStatuses);
+
+        return dto;
     }
 }

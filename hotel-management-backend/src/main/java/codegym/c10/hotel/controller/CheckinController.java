@@ -1,6 +1,7 @@
 package codegym.c10.hotel.controller;
 
 import codegym.c10.hotel.dto.BookingResponseDTO;
+import codegym.c10.hotel.dto.LateCheckinStatusDTO;
 import codegym.c10.hotel.dto.WalkInRequestDTO;
 import codegym.c10.hotel.entity.Booking;
 import codegym.c10.hotel.exception.CustomerNotFoundException;
@@ -91,6 +92,17 @@ public class CheckinController {
         } else {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    @GetMapping("/reservations/{id}/late-checkin-status")
+    public ResponseEntity<?> getLateCheckinStatus(@PathVariable Long id) {
+        LateCheckinStatusDTO statusDTO = bookingService.getLateCheckinStatus(id);
+
+        if (statusDTO == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Booking not found.");
+        }
+
+        return ResponseEntity.ok(statusDTO);
     }
 }
 
