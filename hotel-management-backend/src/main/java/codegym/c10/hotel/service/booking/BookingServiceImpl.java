@@ -4,26 +4,40 @@ import codegym.c10.hotel.dto.BookingResponseDTO;
 import codegym.c10.hotel.dto.LateCheckinStatusDTO;
 import codegym.c10.hotel.dto.RoomBookingDetailsDTO;
 import codegym.c10.hotel.dto.RoomLateCheckinStatusDTO;
+import codegym.c10.hotel.dto.auth.checkin.CheckinRequestDTO;
+import codegym.c10.hotel.dto.auth.checkin.CheckinResponseDTO;
 import codegym.c10.hotel.eNum.BookingDetailStatus;
-import codegym.c10.hotel.eNum.RentType;
 import codegym.c10.hotel.entity.*;
 import codegym.c10.hotel.repository.IBookingRepository;
-import codegym.c10.hotel.service.user.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * BookingServiceImpl provides implementation for booking-related operations
+ * such as retrieving booking details, checking late check-ins, and processing check-ins.
+ */
 @Service
-public class BookingServiceImpl implements IBookingService{
+public class BookingServiceImpl implements IBookingService {
     @Autowired
     private IBookingRepository bookingRepository;
 
+    /**
+     * Retrieves a detailed booking response by booking ID, including customer info,
+     * booking status, total amount, and room details.
+     *
+     * @param id Booking ID
+     * @return BookingResponseDTO with detailed information, or null if not found
+     */
     public BookingResponseDTO getBookingResponse(Long id) {
         Optional<Booking> bookingOpt = bookingRepository.findByIdAndDeletedFalse(id);
 
@@ -40,12 +54,11 @@ public class BookingServiceImpl implements IBookingService{
             responseDTO.setBookingCreatedAt(booking.getCreatedAt());
             responseDTO.setCreatedBy(booking.getCreatedBy().getId());
 
-            // Tính tổng priceTotal và map sang RoomBookingDetailsDTO
+            // Map room booking details and calculate total amount
             List<RoomBookingDetailsDTO> roomDetailsDTO = booking.getBookingDetails().stream()
                     .map(this::convertToRoomBookingDetailsDTO)
                     .collect(Collectors.toList());
 
-            // Tính tổng từ các roomDetailsDTO
             BigDecimal totalAmount = roomDetailsDTO.stream()
                     .map(RoomBookingDetailsDTO::getPriceTotal)
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -59,6 +72,12 @@ public class BookingServiceImpl implements IBookingService{
         return null;
     }
 
+    /**
+     * Converts a BookingDetail entity to a RoomBookingDetailsDTO.
+     *
+     * @param bookingDetail The BookingDetail entity
+     * @return A RoomBookingDetailsDTO with mapped data
+     */
     private RoomBookingDetailsDTO convertToRoomBookingDetailsDTO(BookingDetail bookingDetail) {
         RoomBookingDetailsDTO roomDTO = new RoomBookingDetailsDTO();
         roomDTO.setRoomId(bookingDetail.getRoom().getId());
@@ -76,11 +95,23 @@ public class BookingServiceImpl implements IBookingService{
         return roomDTO;
     }
 
+    /**
+     * Finds a booking by ID where the booking is not marked as deleted.
+     *
+     * @param id Booking ID
+     * @return Optional containing the Booking if found
+     */
     @Override
     public Optional<Booking> findByIdAndDeletedFalse(Long id) {
         return bookingRepository.findByIdAndDeletedFalse(id);
     }
 
+    /**
+     * Checks whether any of the booked rooms are late for check-in.
+     *
+     * @param id Booking ID
+     * @return LateCheckinStatusDTO with check-in status information, or null if booking not found
+     */
     @Override
     public LateCheckinStatusDTO getLateCheckinStatus(Long id) {
         Optional<Booking> bookingOpt = bookingRepository.findByIdAndDeletedFalse(id);
@@ -93,7 +124,7 @@ public class BookingServiceImpl implements IBookingService{
 
         List<BookingDetail> bookedRooms = booking.getBookingDetails().stream()
                 .filter(detail -> detail.getStatus() == BookingDetailStatus.BOOKED)
-                .collect(Collectors.toList());
+                .toList();
 
         boolean isLate = bookedRooms.stream()
                 .anyMatch(detail -> {
@@ -126,5 +157,54 @@ public class BookingServiceImpl implements IBookingService{
         dto.setRoomStatuses(roomStatuses);
 
         return dto;
+    }
+
+    /**
+     * Performs the check-in process for specific rooms in a booking.
+     *
+     * @param request CheckinRequestDTO containing booking ID and room IDs to check-in
+     * @return CheckinResponseDTO containing the check-in results
+     * @throws ResponseStatusException if the booking does not exist
+     */
+    @Override
+    public CheckinResponseDTO checkinRooms(CheckinRequestDTO request) {
+        Optional<Booking> bookingOpt = bookingRepository.findByIdAndDeletedFalse(request.getBookingId());
+        if (bookingOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking không tồn tại");
+        }
+
+        Booking booking = bookingOpt.get();
+
+        List<Long> checkedInRoomIds = new ArrayList<>();
+        List<Long> failedRoomIds = new ArrayList<>();
+
+        for (Long roomId : request.getRoomIdsToCheckin()) {
+            // Tìm BookingDetail tương ứng với roomId trong booking
+            Optional<BookingDetail> matchingDetailOpt = booking.getBookingDetails().stream()
+                    .filter(detail -> detail.getRoom().getId().equals(roomId))
+                    .findFirst();
+
+            if (matchingDetailOpt.isPresent()) {
+                BookingDetail detail = matchingDetailOpt.get();
+
+                // Giả sử chỉ cho phép check-in khi trạng thái là BOOKED
+                if (detail.getStatus() == BookingDetailStatus.BOOKED) {
+                    detail.setStatus(BookingDetailStatus.IN_USE);
+                    checkedInRoomIds.add(roomId);
+                } else {
+                    failedRoomIds.add(roomId); // Không thể check-in vì không đúng trạng thái
+                }
+            } else {
+                failedRoomIds.add(roomId); // Không tìm thấy phòng trong đơn đặt này
+            }
+        }
+
+        bookingRepository.save(booking); // Cập nhật DB nếu có thay đổi
+
+        CheckinResponseDTO response = new CheckinResponseDTO();
+        response.setBookingId(booking.getId());
+        response.setCheckedInRoomIds(checkedInRoomIds);
+        response.setFailedRoomIds(failedRoomIds);
+        return response;
     }
 }
