@@ -3,11 +3,12 @@ package codegym.c10.hotel.controller;
 import codegym.c10.hotel.dto.BookingResponseDTO;
 import codegym.c10.hotel.dto.LateCheckinStatusDTO;
 import codegym.c10.hotel.dto.WalkInRequestDTO;
-import codegym.c10.hotel.entity.Booking;
+import codegym.c10.hotel.dto.auth.checkin.CheckinRequestDTO;
+import codegym.c10.hotel.dto.auth.checkin.CheckinResponseDTO;
 import codegym.c10.hotel.exception.CustomerNotFoundException;
+import codegym.c10.hotel.exception.ErrorResponse;
 import codegym.c10.hotel.exception.RoomNotAvailableException;
 import codegym.c10.hotel.service.AuthenticatedUserService;
-//import codegym.c10.hotel.service.checkin.CheckingService;
 import codegym.c10.hotel.service.booking.BookingServiceImpl;
 import codegym.c10.hotel.service.checkin.CheckingService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,11 +18,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
+/**
+ * Controller responsible for handling operations related to guest check-in,
+ * including walk-in bookings, checking in reserved rooms, and checking late check-in status.
+ */
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -36,27 +41,28 @@ public class CheckinController {
     private AuthenticatedUserService authenticatedUserService;
 
     /**
-     * API endpoint để tạo mới booking walk-in (đặt phòng trực tiếp tại quầy).
+     * API endpoint to create a new walk-in booking (booking made directly at the front desk).
      *
-     * <p>Quy trình:
+     * <p>
+     * Workflow:
      * <ul>
-     *     <li>Trích xuất userId từ request.</li>
-     *     <li>Gọi service {@link CheckingService#createBooking(WalkInRequestDTO, Long)} để tạo booking mới.</li>
-     *     <li>Trả về thông tin booking đã tạo thành công.</li>
+     *     <li>Extract user ID from the authenticated request.</li>
+     *     <li>Create a new booking using {@link CheckingService}.</li>
      * </ul>
      * </p>
      *
-     * <p>Xử lý lỗi:
+     * <p>
+     * Response:
      * <ul>
-     *     <li>Trả về mã HTTP 400 (Bad Request) nếu xảy ra các lỗi như: phòng không khả dụng, khách hàng không tồn tại, hoặc dữ liệu đầu vào không hợp lệ.</li>
-     *     <li>Trả về mã HTTP 500 (Internal Server Error) nếu xảy ra lỗi bất ngờ trong hệ thống.</li>
+     *     <li>200 OK if the booking is created successfully.</li>
+     *     <li>400 Bad Request if the room is unavailable, customer not found, or input is invalid.</li>
+     *     <li>500 Internal Server Error for unexpected system errors.</li>
      * </ul>
      * </p>
      *
-     * @param walkInRequestDTO Dữ liệu booking gửi từ client (bao gồm thông tin khách hàng, danh sách phòng, thời gian nhận phòng, v.v...).
-     * @param request Đối tượng {@link HttpServletRequest} chứa thông tin xác thực người dùng.
-     * @return {@link ResponseEntity} chứa trạng thái booking và dữ liệu booking chi tiết nếu thành công;
-     *         hoặc thông tin lỗi nếu thất bại.
+     * @param walkInRequestDTO Booking information sent from the client.
+     * @param request HttpServletRequest containing the user authentication info.
+     * @return ResponseEntity containing booking status and booking details if successful.
      */
     @PostMapping("/checkins/walkin")
     public ResponseEntity<Map<String, Object>> checkinWalking(
@@ -83,6 +89,12 @@ public class CheckinController {
         }
     }
 
+    /**
+     * API endpoint to retrieve booking details by ID.
+     *
+     * @param id ID of the booking to retrieve.
+     * @return 200 OK with booking details if found, or 404 Not Found if not.
+     */
     @GetMapping("/reservations/{id}")
     public ResponseEntity<BookingResponseDTO> getBooking(@PathVariable Long id) {
         BookingResponseDTO bookingResponse = bookingService.getBookingResponse(id);
@@ -94,6 +106,12 @@ public class CheckinController {
         }
     }
 
+    /**
+     * API endpoint to check if a booking is considered late for check-in.
+     *
+     * @param id ID of the booking.
+     * @return 200 OK with late check-in status, or 404 Not Found if booking doesn't exist.
+     */
     @GetMapping("/reservations/{id}/late-checkin-status")
     public ResponseEntity<?> getLateCheckinStatus(@PathVariable Long id) {
         LateCheckinStatusDTO statusDTO = bookingService.getLateCheckinStatus(id);
@@ -103,6 +121,48 @@ public class CheckinController {
         }
 
         return ResponseEntity.ok(statusDTO);
+    }
+
+    /**
+     * API endpoint to perform check-in for guests with existing reservations.
+     *
+     * <p>
+     * Updates room statuses from "reserved" to "occupied".
+     * </p>
+     *
+     * <p>
+     * Response:
+     * <ul>
+     *     <li>200 OK if check-in was successful (either fully or partially).</li>
+     *     <li>400 Bad Request if booking ID is not found.</li>
+     *     <li>500 Internal Server Error for unexpected errors.</li>
+     * </ul>
+     * </p>
+     *
+     * @param request Object containing booking ID and list of room IDs to check-in.
+     * @return Response with successfully checked-in rooms and failed ones if any.
+     */
+    @PostMapping("/checkins")
+    public ResponseEntity<?> checkinRooms(@RequestBody CheckinRequestDTO request) {
+        try {
+            CheckinResponseDTO response = bookingService.checkinRooms(request);
+            return ResponseEntity.ok(response);
+        } catch (ResponseStatusException ex) {
+            // Trả về ErrorResponse chi tiết với message và lỗi
+            ErrorResponse errorResponse = new ErrorResponse(
+                    ex.getReason(),
+                    Map.of("bookingId", "Không tìm thấy booking với ID: " + request.getBookingId())
+            );
+            return ResponseEntity
+                    .status(ex.getStatusCode())
+                    .body(errorResponse);
+        } catch (Exception ex) {
+            // Trả về lỗi hệ thống chung
+            ErrorResponse errorResponse = new ErrorResponse("Lỗi hệ thống", Map.of("detail", ex.getMessage()));
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
     }
 }
 
