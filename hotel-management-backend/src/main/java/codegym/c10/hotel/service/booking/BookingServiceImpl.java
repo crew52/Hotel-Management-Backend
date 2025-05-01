@@ -8,7 +8,9 @@ import codegym.c10.hotel.dto.auth.checkin.CheckinRequestDTO;
 import codegym.c10.hotel.dto.auth.checkin.CheckinResponseDTO;
 import codegym.c10.hotel.eNum.BookingDetailStatus;
 import codegym.c10.hotel.entity.*;
+import codegym.c10.hotel.exception.BookingException;
 import codegym.c10.hotel.repository.IBookingRepository;
+import codegym.c10.hotel.service.user.IUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,21 @@ import java.util.stream.Collectors;
 public class BookingServiceImpl implements IBookingService {
     @Autowired
     private IBookingRepository bookingRepository;
+
+    @Autowired
+    private IUserService userService;
+
+    /**
+     * Retrieves a User entity by ID.
+     *
+     * @param userId the ID of the user
+     * @return the User entity
+     * @throws BookingException if user not found
+     */
+    private User getUserById(Long userId) {
+        return userService.findById(userId)
+                .orElseThrow(() -> new BookingException("User with ID " + userId + " not found."));
+    }
 
     /**
      * Retrieves a detailed booking response by booking ID, including customer info,
@@ -53,6 +70,13 @@ public class BookingServiceImpl implements IBookingService {
             responseDTO.setBookingStatus(booking.getBookingStatus());
             responseDTO.setBookingCreatedAt(booking.getCreatedAt());
             responseDTO.setCreatedBy(booking.getCreatedBy().getId());
+
+            User user = getUserById(booking.getCreatedBy().getId());
+            if (user == null) {
+                throw new BookingException("User with ID " + booking.getCreatedBy().getId() + " not found.");
+            }
+
+            responseDTO.setUsername(user.getUsername());
 
             // Map room booking details and calculate total amount
             List<RoomBookingDetailsDTO> roomDetailsDTO = booking.getBookingDetails().stream()
