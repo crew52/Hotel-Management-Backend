@@ -61,7 +61,7 @@ public class CheckinController {
      * </p>
      *
      * @param walkInRequestDTO Booking information sent from the client.
-     * @param request HttpServletRequest containing the user authentication info.
+     * @param request          HttpServletRequest containing the user authentication info.
      * @return ResponseEntity containing booking status and booking details if successful.
      */
     @PostMapping("/checkins/walkin")
@@ -164,5 +164,17 @@ public class CheckinController {
                     .body(errorResponse);
         }
     }
+
+    @GetMapping("/checkins/{id}/receipt")
+    public ResponseEntity<BookingResponseDTO> getReceipt(@PathVariable Long id) {
+        BookingResponseDTO bookingResponse = bookingService.getBookingResponse(id);
+
+        if (bookingResponse != null) {
+            return ResponseEntity.ok(bookingResponse);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
 }
 

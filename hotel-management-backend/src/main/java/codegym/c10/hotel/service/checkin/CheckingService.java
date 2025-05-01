@@ -253,6 +253,10 @@ public class CheckingService {
      * @return BookingResponseDTO containing full booking details
      */
     private BookingResponseDTO buildBookingResponseDTO(Booking booking, List<RoomBookingDetailsDTO> roomDetailsList, Long userId) {
+        User user = getUserById(userId);
+        if (user == null) {
+            throw new BookingException("User with ID " + userId + " not found.");
+        }
         BookingResponseDTO dto = new BookingResponseDTO();
         dto.setBookingId(booking.getId());
         dto.setCustomerName(booking.getCustomer().getFullName());
@@ -264,6 +268,7 @@ public class CheckingService {
         dto.setRooms(roomDetailsList);
         dto.setBookingCreatedAt(booking.getCreatedAt());
         dto.setCreatedBy(userId);
+        dto.setUsername(user.getUsername());
         return dto;
     }
 

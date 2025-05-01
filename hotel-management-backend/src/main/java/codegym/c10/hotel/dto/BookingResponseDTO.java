@@ -18,4 +18,5 @@ public class BookingResponseDTO {
     private List<RoomBookingDetailsDTO> rooms;
     private LocalDateTime bookingCreatedAt;
     private Long createdBy;
+    private String username;
 }
