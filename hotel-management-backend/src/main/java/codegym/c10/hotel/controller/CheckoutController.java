@@ -59,7 +59,23 @@ public class CheckoutController {
 
     @GetMapping("/{id}/fee")
     public ResponseEntity<List<FeeResponseDTO>> getFee(@PathVariable("id") Long bookingId) {
+        // Lấy thông tin fee
         List<FeeResponseDTO> feeList = checkoutService.calculateFee(bookingId);
+
+        // Lấy thông tin người dùng hiện tại từ SecurityContextHolder
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrinciple) {
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            Long userId = userPrinciple.getId();
+            String userName = userPrinciple.getUsername();
+
+            // Gán thông tin người dùng vào các đối tượng FeeResponseDTO
+            for (FeeResponseDTO fee : feeList) {
+                fee.setUserId(userId);
+                fee.setUserName(userName);
+            }
+        }
+
         return ResponseEntity.ok(feeList);
     }
 
