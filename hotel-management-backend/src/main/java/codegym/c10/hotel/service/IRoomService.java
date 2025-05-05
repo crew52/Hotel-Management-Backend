@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface IRoomService extends IGenerateService<Room>{
     Room update(Room room);
     Page<Room> findAllByDeletedFalse(Pageable pageable);
-    Page<Room> advancedSearch(String keyword, RoomStatus status, Integer floor, Pageable pageable);
+    Page<Room> advancedSearch(String keyword, RoomStatus status, Integer floor, Long categoryId, Pageable pageable);
     Optional<Room> findByIdAndStatusAndIsCleanTrueAndDeletedFalse(Long id);
     Room updateRoomStatus(Long id, RoomStatus status);
     Room updateRoomCleaningStatus(Long id);

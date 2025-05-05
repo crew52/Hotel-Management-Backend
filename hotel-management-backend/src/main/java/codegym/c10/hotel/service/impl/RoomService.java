@@ -84,11 +84,12 @@ public class RoomService implements IRoomService {
      * @return a page of rooms matching the search criteria
      */
     @Override
-    public Page<Room> advancedSearch(String keyword, RoomStatus status, Integer floor, Pageable pageable) {
+    public Page<Room> advancedSearch(String keyword, RoomStatus status, Integer floor, Long categoryId, Pageable pageable) {
         return roomRepository.advancedSearch(
                 keyword != null ? keyword.toLowerCase() : null,
                 status,
                 floor,
+                categoryId,
                 pageable
         );
     }
