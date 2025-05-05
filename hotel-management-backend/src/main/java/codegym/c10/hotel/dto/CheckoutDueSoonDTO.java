@@ -44,4 +44,8 @@ public class CheckoutDueSoonDTO {
     private String customerPhone;
     private String customerEmail;
     private String customerAddress;
+
+    // Thông tin người dùng truy vấn
+    private Long userId;
+    private String userName;
 }

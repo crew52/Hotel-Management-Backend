@@ -86,5 +86,27 @@ public class CheckoutController {
         return ResponseEntity.ok(invoice);
     }
 
+    @GetMapping("/due-soon")
+    public ResponseEntity<List<CheckoutDueSoonDTO>> getCheckoutDueSoon(
+            @RequestParam(defaultValue = "30") Integer minutesThreshold) {
+
+        List<CheckoutDueSoonDTO> dueSoonList = checkoutService.findRoomsCheckoutDueSoon(minutesThreshold);
+
+        // Lấy thông tin người dùng hiện tại từ SecurityContextHolder
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrinciple) {
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            Long userId = userPrinciple.getId();
+            String userName = userPrinciple.getUsername();
+
+            // Gán thông tin người dùng vào các đối tượng CheckoutDueSoonDTO
+            for (CheckoutDueSoonDTO dueSoon : dueSoonList) {
+                dueSoon.setUserId(userId);
+                dueSoon.setUserName(userName);
+            }
+        }
+
+        return ResponseEntity.ok(dueSoonList);
+    }
 
 }
