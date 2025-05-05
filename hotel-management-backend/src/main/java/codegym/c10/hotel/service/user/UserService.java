@@ -48,6 +48,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @LogActivity(action = "USER_REGISTRATION", description = "Đăng ký tài khoản người dùng mới")
     public ApiResponse registerUser(SignupRequest signupRequest) {
         if (userRepository.existsByUsername(signupRequest.getUsername())) {
             return new ApiResponse(false, "Username already exists");
@@ -175,6 +176,7 @@ public class UserService implements IUserService {
     }
 
     @Override
+    @LogActivity(action = "USER_SAVE", description = "Lưu thông tin người dùng vào hệ thống")
     public User save(User user) {
         // Implementation for save
         return userRepository.save(user);
@@ -189,6 +191,7 @@ public class UserService implements IUserService {
 
     @Override
     @Transactional
+    @LogActivity(action = "USER_UPDATE", description = "Cập nhật thông tin người dùng")
     public User update(User user) {
         // Kiểm tra user tồn tại
         User existingUser = userRepository.findById(user.getId())

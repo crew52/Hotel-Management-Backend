@@ -1,5 +1,6 @@
 package codegym.c10.hotel.service.checkin;
 
+import codegym.c10.hotel.annotation.LogActivity;
 import codegym.c10.hotel.dto.*;
 import codegym.c10.hotel.eNum.*;
 import codegym.c10.hotel.entity.*;
@@ -48,6 +49,7 @@ public class CheckingService {
      * @return BookingResponseDTO containing booking details and room information
      */
     @Transactional
+    @LogActivity(action = "CREATE_BOOKING", description = "Tạo đơn đặt phòng mới từ khách tại quầy")
     public BookingResponseDTO createBooking(WalkInRequestDTO walkInRequestDTO, Long userId) {
         User user = getUserById(userId);
         Booking booking = createNewBooking(walkInRequestDTO, user);

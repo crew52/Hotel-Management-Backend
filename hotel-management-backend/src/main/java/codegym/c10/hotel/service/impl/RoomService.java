@@ -1,6 +1,6 @@
 package codegym.c10.hotel.service.impl;
 
-
+import codegym.c10.hotel.annotation.LogActivity;
 import codegym.c10.hotel.eNum.RoomStatus;
 import codegym.c10.hotel.entity.Room;
 import codegym.c10.hotel.entity.RoomCategory;
@@ -35,6 +35,7 @@ public class RoomService implements IRoomService {
      * @throws EntityNotFoundException if the room or its category is not found
      */
     @Override
+    @LogActivity(action = "UPDATE_ROOM", description = "Cập nhật thông tin phòng")
     public Room update(Room room) {
         // Kiểm tra xem phòng có tồn tại không
         Room existingRoom = roomRepository.findById(room.getId())
@@ -123,6 +124,7 @@ public class RoomService implements IRoomService {
      * @throws EntityNotFoundException if the room category does not exist
      */
     @Override
+    @LogActivity(action = "CREATE_ROOM", description = "Thêm phòng mới vào hệ thống")
     public Room save(Room room) {
         Long categoryId = room.getRoomCategory().getId();
 
@@ -154,6 +156,7 @@ public class RoomService implements IRoomService {
      */
     @Override
     @Transactional
+    @LogActivity(action = "DELETE_ROOM", description = "Xóa phòng khỏi hệ thống")
     public void remove(Long id) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Room not found with id: " + id));
@@ -179,6 +182,7 @@ public class RoomService implements IRoomService {
      */
     @Override
     @Transactional
+    @LogActivity(action = "UPDATE_ROOM_STATUS", description = "Cập nhật trạng thái phòng")
     public Room updateRoomStatus(Long id, RoomStatus status) {
         Room room = roomRepository.findByIdAndDeletedFalse(id)
                 .orElseThrow(() -> new EntityNotFoundException("Room not found with id: " + id));
@@ -195,6 +199,7 @@ public class RoomService implements IRoomService {
      * @throws EntityNotFoundException if no room is found with the given ID
      */
     @Override
+    @LogActivity(action = "UPDATE_ROOM_CLEANING_STATUS", description = "Cập nhật trạng thái vệ sinh phòng")
     public Room updateRoomCleaningStatus(Long id) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Room not found with id: " + id));

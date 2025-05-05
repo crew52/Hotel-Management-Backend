@@ -5,6 +5,7 @@ import codegym.c10.hotel.eNum.RoomCategoryStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import jakarta.validation.constraints.*;
+import org.hibernate.envers.Audited;
 
 import java.math.BigDecimal;
 
@@ -15,6 +16,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode(callSuper = false)
+@Audited
 public class RoomCategory extends BaseEntity {
 
     @Id

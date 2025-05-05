@@ -3,6 +3,7 @@ package codegym.c10.hotel.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import jakarta.validation.constraints.*;
+import org.hibernate.envers.Audited;
 import java.util.Set;
 
 @EqualsAndHashCode(callSuper = true)
@@ -12,6 +13,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Audited
 public class User extends BaseEntity {
 
     @Id
@@ -45,6 +47,7 @@ public class User extends BaseEntity {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
+    @Audited(targetAuditMode = org.hibernate.envers.RelationTargetAuditMode.NOT_AUDITED)
     private Set<@NotNull Role> roles;
 
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)

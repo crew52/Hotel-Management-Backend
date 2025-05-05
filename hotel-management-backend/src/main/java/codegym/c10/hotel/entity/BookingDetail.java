@@ -6,6 +6,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import jakarta.validation.constraints.*;
 import codegym.c10.hotel.eNum.RoomStatus;
+import org.hibernate.envers.Audited;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.time.LocalDateTime;
 @Builder
 @Entity
 @Table(name = "Booking_Details")
+@Audited
 public class BookingDetail {
 
     @Id

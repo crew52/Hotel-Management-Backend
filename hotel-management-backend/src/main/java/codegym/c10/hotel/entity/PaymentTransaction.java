@@ -4,6 +4,7 @@ import codegym.c10.hotel.eNum.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
 import jakarta.validation.constraints.*;
+import org.hibernate.envers.Audited;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,6 +14,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
+@Audited
 @Table(name = "Payment_Transactions")
 public class PaymentTransaction {
 
