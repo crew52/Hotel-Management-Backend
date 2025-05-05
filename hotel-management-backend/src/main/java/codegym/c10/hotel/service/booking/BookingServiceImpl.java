@@ -8,6 +8,7 @@ import codegym.c10.hotel.dto.RoomLateCheckinStatusDTO;
 import codegym.c10.hotel.dto.auth.checkin.CheckinRequestDTO;
 import codegym.c10.hotel.dto.auth.checkin.CheckinResponseDTO;
 import codegym.c10.hotel.eNum.BookingDetailStatus;
+import codegym.c10.hotel.eNum.RoomStatus;
 import codegym.c10.hotel.entity.*;
 import codegym.c10.hotel.exception.BookingException;
 import codegym.c10.hotel.repository.IBookingRepository;
@@ -216,6 +217,7 @@ public class BookingServiceImpl implements IBookingService {
                 // Giả sử chỉ cho phép check-in khi trạng thái là BOOKED
                 if (detail.getStatus() == BookingDetailStatus.BOOKED) {
                     detail.setStatus(BookingDetailStatus.IN_USE);
+                    detail.setRoomStatus(RoomStatus.IN_USE);
                     checkedInRoomIds.add(roomId);
                 } else {
                     failedRoomIds.add(roomId); // Không thể check-in vì không đúng trạng thái
