@@ -5,6 +5,7 @@ import codegym.c10.hotel.eNum.RentType;
 import jakarta.persistence.*;
 import lombok.*;
 import jakarta.validation.constraints.*;
+import codegym.c10.hotel.eNum.RoomStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -50,6 +51,10 @@ public class BookingDetail {
 
     @Enumerated(EnumType.STRING)
     private BookingDetailStatus status = BookingDetailStatus.BOOKED;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "room_status_in_booking")
+    private RoomStatus roomStatus = RoomStatus.AVAILABLE;
 
     @Column(name = "adult_count", nullable = false)
     private Integer adultCount = 1;   // số lượng người lớn, mặc định 1

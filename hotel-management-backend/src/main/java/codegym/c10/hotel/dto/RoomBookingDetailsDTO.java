@@ -2,6 +2,7 @@ package codegym.c10.hotel.dto;
 
 import codegym.c10.hotel.eNum.BookingDetailStatus;
 import codegym.c10.hotel.eNum.RentType;
+import codegym.c10.hotel.eNum.RoomStatus;
 import lombok.Data;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -19,4 +20,5 @@ public class RoomBookingDetailsDTO {
     private LocalDateTime checkinTime;
     private LocalDateTime checkoutTime;
     private Integer duration;
+    private RoomStatus roomStatusBooking;
 }

@@ -182,6 +182,7 @@ public class CheckingService {
         bookingDetails.setDuration(roomRequest.getDuration());
         bookingDetails.setPrice(calculatePrice(room, roomRequest.getRentType(), roomRequest.getDuration()));
         bookingDetails.setStatus(BookingDetailStatus.BOOKED);
+        bookingDetails.setRoomStatus(RoomStatus.UPCOMING);
 
         return bookingDetails;
     }
@@ -240,6 +241,7 @@ public class CheckingService {
         dto.setAdultCount(details.getAdultCount());
         dto.setChildCount(details.getChildCount());
         dto.setDuration(roomRequest.getDuration());
+        dto.setRoomStatusBooking(details.getRoomStatus());
 
         return dto;
     }
