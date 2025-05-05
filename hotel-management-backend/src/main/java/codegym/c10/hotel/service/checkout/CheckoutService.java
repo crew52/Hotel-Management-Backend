@@ -83,7 +83,7 @@ public class CheckoutService {
         }
     }
 
-
+// xử lý tính tiền phòng
 
     public List<FeeResponseDTO> calculateFee(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
@@ -139,6 +139,7 @@ public class CheckoutService {
         return feeList;
     }
 
+// xử lý in ra hóa đơn
 
     public InvoiceResponseDTO getInvoice(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
@@ -214,6 +215,8 @@ public class CheckoutService {
         return invoice;
     }
 
+
+// xử lý thanh toán trước thời hạn 60 phút
 
     public List<CheckoutDueSoonDTO> findRoomsCheckoutDueSoon(Integer minutesThreshold) {
         LocalDateTime now = LocalDateTime.now();
