@@ -21,6 +21,7 @@ public interface IRoomRepository extends JpaRepository<Room, Long> {
             "WHERE r.deleted = false " +
             "AND (:status IS NULL OR r.status = :status) " +
             "AND (:floor IS NULL OR r.floor = :floor) " +
+            "AND (:categoryId IS NULL OR rc.id = :categoryId) " +
             "AND (" +
             "  :keyword IS NULL OR " +
             "  LOWER(r.note) LIKE %:keyword% OR " +
@@ -31,6 +32,7 @@ public interface IRoomRepository extends JpaRepository<Room, Long> {
             @Param("keyword") String keyword,
             @Param("status") RoomStatus status,
             @Param("floor") Integer floor,
+            @Param("categoryId") Long categoryId,
             Pageable pageable);
 
     Optional<Room> findByIdAndStatusAndIsCleanTrueAndDeletedFalse(Long id, RoomStatus status);

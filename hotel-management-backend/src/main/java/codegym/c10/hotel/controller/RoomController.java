@@ -94,25 +94,27 @@ public class RoomController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    /**
-     * Searches rooms based on optional filter parameters including keyword, status, and floor.
-     *
-     * @param keyword the search keyword (optional)
-     * @param status the status of the room (optional)
-     * @param floor the floor number to filter by (optional)
-     * @param page the page number for pagination (default is 0)
-     * @param size the number of rooms per page (default is 10)
-     * @return a paginated list of rooms that match the search criteria
-     */
+//    /**
+//     * Searches rooms based on optional filter parameters including keyword, status, floor, and category.
+//     *
+//     * @param keyword the search keyword (optional)
+//     * @param status the status of the room (optional)
+//     * @param floor the floor number to filter by (optional)
+//     * @param categoryId the category ID to filter by (optional), defaults to null if empty or invalid
+//     * @param page the page number for pagination (default is 0)
+//     * @param size the number of rooms per page (default is 10)
+//     * @return a paginated list of rooms that match the search criteria
+//     */
     @GetMapping("/search")
     @PreAuthorize("@securityService.hasPermission('VIEW_ROOM')")
-    public ResponseEntity<Page<Room>> searchRooms(@RequestParam(required = false) String keyword,
-                                                  @RequestParam(required = false) RoomStatus status,
-                                                  @RequestParam(required = false) Integer floor,
-                                                  @RequestParam(defaultValue = "0") int page,
-                                                  @RequestParam(defaultValue = "10") int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
-        Page<Room> rooms = roomService.advancedSearch(keyword, status, floor, pageable);
+    public ResponseEntity<Page<Room>> searchRooms(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) RoomStatus status,
+            @RequestParam(required = false) Integer floor,
+            @RequestParam(required = false) String categoryId,
+            Pageable pageable) {
+        Long categoryIdLong = (categoryId != null && !categoryId.isEmpty()) ? Long.valueOf(categoryId) : null;
+        Page<Room> rooms = roomService.advancedSearch(keyword, status, floor, categoryIdLong, pageable);
         return ResponseEntity.ok(rooms);
     }
 
@@ -211,7 +213,6 @@ public class RoomController {
         return roomHandler.updateRoom(id, room, bindingResult, images);
     }
 
-
     /**
      * Parses a JSON string into a Room object.
      *
@@ -270,24 +271,20 @@ public class RoomController {
         }
     }
 
-
-     /**
+    /**
      * Định nghĩa endpoint cho việc lấy danh sách phòng sắp checkout
      *
-             * @param minutesThreshold
+     * @param minutesThreshold
      * - Tham số không bắt buộc (optional) định nghĩa khoảng thời gian (phút) để tìm kiếm
      * - Giá trị mặc định là 60 phút
      * - Ví dụ:
-                *   + /api/rooms/checkout-due-soon            -> tìm trong 60 phút tới
+     *   + /api/rooms/checkout-due-soon            -> tìm trong 60 phút tới
      *   + /api/rooms/checkout-due-soon?minutesThreshold=30  -> tìm trong 30 phút tới
-      */
+     */
     @GetMapping("/checkout-due-soon")
     public ResponseEntity<List<CheckoutDueSoonDTO>> getCheckoutDueSoon(
             @RequestParam(defaultValue = "60") Integer minutesThreshold) {
         List<CheckoutDueSoonDTO> rooms = checkoutService.findRoomsCheckoutDueSoon(minutesThreshold);
         return ResponseEntity.ok(rooms);
     }
-
-
-
 }
