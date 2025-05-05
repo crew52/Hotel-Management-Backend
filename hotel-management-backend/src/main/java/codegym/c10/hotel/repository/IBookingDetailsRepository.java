@@ -1,6 +1,7 @@
 package codegym.c10.hotel.repository;
 
 import codegym.c10.hotel.eNum.BookingDetailStatus;
+import codegym.c10.hotel.entity.Booking;
 import codegym.c10.hotel.entity.BookingDetail;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface IBookingDetailsRepository extends JpaRepository<BookingDetail, Long> {
@@ -65,4 +67,6 @@ public interface IBookingDetailsRepository extends JpaRepository<BookingDetail, 
             @Param("threshold") LocalDateTime threshold,
             @Param("status") BookingDetailStatus status
     );
+
+    Optional<BookingDetail> findByIdAndDeletedFalse(Long id);
 }
