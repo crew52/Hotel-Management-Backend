@@ -4,6 +4,8 @@ import codegym.c10.hotel.eNum.BookingStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import jakarta.validation.constraints.*;
+import org.hibernate.envers.Audited;
+import org.hibernate.envers.RelationTargetAuditMode;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,6 +17,7 @@ import java.util.List;
 @Builder
 @Entity
 @Table(name = "Booking")
+@Audited
 public class Booking {
 
     @Id
@@ -23,6 +26,7 @@ public class Booking {
 
     @ManyToOne
     @JoinColumn(name = "customer_id", foreignKey = @ForeignKey(name = "fk_booking_customer"))
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private Customer customer;
 
     @DecimalMin("0.00")
@@ -42,6 +46,7 @@ public class Booking {
 
     @ManyToOne
     @JoinColumn(name = "created_by", foreignKey = @ForeignKey(name = "fk_booking_creator"))
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private User createdBy;
 
     @Column(columnDefinition = "TEXT")
@@ -59,6 +64,7 @@ public class Booking {
     private List<BookingDetail> bookingDetails;
 
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     private List<PaymentTransaction> paymentTransactions;
 
     @PrePersist

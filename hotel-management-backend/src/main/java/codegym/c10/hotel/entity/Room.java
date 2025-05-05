@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import jakarta.validation.constraints.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import org.hibernate.envers.Audited;
 
 import java.time.LocalDate;
 
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Audited
 public class Room extends BaseEntity {
 
     @Id

@@ -1,5 +1,6 @@
 package codegym.c10.hotel.service.booking;
 
+import codegym.c10.hotel.annotation.LogActivity;
 import codegym.c10.hotel.dto.BookingResponseDTO;
 import codegym.c10.hotel.dto.LateCheckinStatusDTO;
 import codegym.c10.hotel.dto.RoomBookingDetailsDTO;
@@ -191,6 +192,7 @@ public class BookingServiceImpl implements IBookingService {
      * @throws ResponseStatusException if the booking does not exist
      */
     @Override
+    @LogActivity(action = "ROOM_CHECKIN", description = "Xác nhận nhận phòng cho khách hàng")
     public CheckinResponseDTO checkinRooms(CheckinRequestDTO request) {
         Optional<Booking> bookingOpt = bookingRepository.findByIdAndDeletedFalse(request.getBookingId());
         if (bookingOpt.isEmpty()) {
