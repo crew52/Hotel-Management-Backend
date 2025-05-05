@@ -55,10 +55,5 @@ public class CheckoutController {
         return ResponseEntity.ok(invoice);
     }
 
-    @GetMapping("/checkout-due-soon")
-    public ResponseEntity<List<CheckoutDueSoonDTO>> getCheckoutDueSoon(
-            @RequestParam(defaultValue = "60") Integer minutesThreshold) {
-        List<CheckoutDueSoonDTO> rooms = checkoutService.findRoomsCheckoutDueSoon(minutesThreshold);
-        return ResponseEntity.ok(rooms);
-    }
+
 }

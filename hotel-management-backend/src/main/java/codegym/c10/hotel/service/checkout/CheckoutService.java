@@ -68,10 +68,10 @@ public class CheckoutService {
 
             // 4. Tạo thông báo chi tiết
             return String.format(
-                    "Checkout thành công!\n" +
-                            "- Phòng %s đã được trả\n" +
-                            "- Trạng thái dọn dẹp: %s\n" +
-                            "- Booking Detail: %s → %s",
+                    "Checkout thành công!" +
+                            ", Phòng %s đã được trả" +
+                            ", Trạng thái dọn dẹp: %s" +
+                            ", Booking Detail: %s → %s",
                     room.getNote(),
                     requestDTO.getIsClean() ? "Đã dọn dẹp" : "Chưa dọn dẹp",
                     oldStatus,
