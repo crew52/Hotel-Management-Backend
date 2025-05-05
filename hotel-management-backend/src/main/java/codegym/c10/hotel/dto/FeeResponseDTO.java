@@ -42,4 +42,6 @@ public class FeeResponseDTO {
     // Thông tin thêm
     private Integer adultCount;     // Số người lớn
     private Integer childCount;     // Số trẻ em
+    private Long userId;
+    private String userName;
 }

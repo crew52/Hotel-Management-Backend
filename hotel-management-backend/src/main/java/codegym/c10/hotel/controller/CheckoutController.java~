@@ -4,9 +4,12 @@ import codegym.c10.hotel.dto.CheckoutDueSoonDTO;
 import codegym.c10.hotel.dto.CheckoutRequestDTO;
 import codegym.c10.hotel.dto.FeeResponseDTO;
 import codegym.c10.hotel.dto.InvoiceResponseDTO;
+import codegym.c10.hotel.dto.auth.UserPrinciple;
 import codegym.c10.hotel.service.checkout.CheckoutService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -22,6 +25,16 @@ public class CheckoutController {
     @PostMapping
     public ResponseEntity<?> checkout(@RequestBody CheckoutRequestDTO requestDTO) {
         try {
+            // Lấy thông tin người dùng hiện tại đang đăng nhập từ SecurityContextHolder
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication != null && authentication.getPrincipal() instanceof UserPrinciple) {
+                UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+                Long userId = userPrinciple.getId();
+
+                requestDTO.setUserId(userId);
+                requestDTO.setUserName(userPrinciple.getUsername());
+            }
+
             String result = checkoutService.processCheckout(requestDTO);
             return ResponseEntity.ok(new HashMap<String, Object>() {{
                 put("status", "success");
@@ -30,7 +43,9 @@ public class CheckoutController {
                     put("bookingId", requestDTO.getBookingId());
                     put("roomId", requestDTO.getRoomId());
                     put("isClean", requestDTO.getIsClean());
-                    put("bookingDetailStatus", "COMPLETED");  // Thêm trạng thái BookingDetail
+                    put("userId", requestDTO.getUserId());
+                    put("userName", requestDTO.getUserName());
+                    put("bookingDetailStatus", "COMPLETED");
                 }});
             }});
         } catch (RuntimeException e) {
@@ -44,7 +59,23 @@ public class CheckoutController {
 
     @GetMapping("/{id}/fee")
     public ResponseEntity<List<FeeResponseDTO>> getFee(@PathVariable("id") Long bookingId) {
+        // Lấy thông tin fee
         List<FeeResponseDTO> feeList = checkoutService.calculateFee(bookingId);
+
+        // Lấy thông tin người dùng hiện tại từ SecurityContextHolder
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrinciple) {
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            Long userId = userPrinciple.getId();
+            String userName = userPrinciple.getUsername();
+
+            // Gán thông tin người dùng vào các đối tượng FeeResponseDTO
+            for (FeeResponseDTO fee : feeList) {
+                fee.setUserId(userId);
+                fee.setUserName(userName);
+            }
+        }
+
         return ResponseEntity.ok(feeList);
     }
 
@@ -55,10 +86,27 @@ public class CheckoutController {
         return ResponseEntity.ok(invoice);
     }
 
-    @GetMapping("/checkout-due-soon")
+    @GetMapping("/due-soon")
     public ResponseEntity<List<CheckoutDueSoonDTO>> getCheckoutDueSoon(
             @RequestParam(defaultValue = "60") Integer minutesThreshold) {
-        List<CheckoutDueSoonDTO> rooms = checkoutService.findRoomsCheckoutDueSoon(minutesThreshold);
-        return ResponseEntity.ok(rooms);
+
+        List<CheckoutDueSoonDTO> dueSoonList = checkoutService.findRoomsCheckoutDueSoon(minutesThreshold);
+
+        // Lấy thông tin người dùng hiện tại từ SecurityContextHolder
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrinciple) {
+            UserPrinciple userPrinciple = (UserPrinciple) authentication.getPrincipal();
+            Long userId = userPrinciple.getId();
+            String userName = userPrinciple.getUsername();
+
+            // Gán thông tin người dùng vào các đối tượng CheckoutDueSoonDTO
+            for (CheckoutDueSoonDTO dueSoon : dueSoonList) {
+                dueSoon.setUserId(userId);
+                dueSoon.setUserName(userName);
+            }
+        }
+
+        return ResponseEntity.ok(dueSoonList);
     }
+
 }

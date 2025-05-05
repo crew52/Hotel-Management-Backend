@@ -68,10 +68,10 @@ public class CheckoutService {
 
             // 4. Tạo thông báo chi tiết
             return String.format(
-                    "Checkout thành công!\n" +
-                            "- Phòng %s đã được trả\n" +
-                            "- Trạng thái dọn dẹp: %s\n" +
-                            "- Booking Detail: %s → %s",
+                    "Checkout thành công!" +
+                            ", Phòng %s đã được trả" +
+                            ", Trạng thái dọn dẹp: %s" +
+                            ", Booking Detail: %s → %s",
                     room.getNote(),
                     requestDTO.getIsClean() ? "Đã dọn dẹp" : "Chưa dọn dẹp",
                     oldStatus,
@@ -83,7 +83,7 @@ public class CheckoutService {
         }
     }
 
-
+// xử lý tính tiền phòng
 
     public List<FeeResponseDTO> calculateFee(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
@@ -139,6 +139,7 @@ public class CheckoutService {
         return feeList;
     }
 
+// xử lý in ra hóa đơn
 
     public InvoiceResponseDTO getInvoice(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
@@ -214,6 +215,8 @@ public class CheckoutService {
         return invoice;
     }
 
+
+// xử lý thanh toán trước thời hạn 60 phút
 
     public List<CheckoutDueSoonDTO> findRoomsCheckoutDueSoon(Integer minutesThreshold) {
         LocalDateTime now = LocalDateTime.now();
