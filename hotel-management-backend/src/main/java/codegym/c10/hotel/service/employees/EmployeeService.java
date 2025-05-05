@@ -1,5 +1,6 @@
 package codegym.c10.hotel.service.employees;
 
+import codegym.c10.hotel.annotation.LogActivity;
 import codegym.c10.hotel.dto.EmployeeDto;
 import codegym.c10.hotel.entity.Employee;
 import codegym.c10.hotel.entity.User;
@@ -50,6 +51,7 @@ public class EmployeeService implements IEmployeeService {
 
     @Override
     @Transactional
+    @LogActivity(action = "EMPLOYEE_SAVE", description = "Thêm nhân viên mới vào hệ thống")
     public Employee save(Employee employee) {
         // Validate if user exists
         Long userId = employee.getUser().getId();
@@ -62,6 +64,7 @@ public class EmployeeService implements IEmployeeService {
 
     @Override
     @Transactional
+    @LogActivity(action = "EMPLOYEE_UPDATE", description = "Cập nhật thông tin nhân viên")
     public Employee update(Employee employee) {
         // Check if employee exists
         employeeRepository.findByIdAndDeletedFalse(employee.getId())

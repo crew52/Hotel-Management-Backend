@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-public class LateCheckinStatusDTO {
+public class    LateCheckinStatusDTO {
     private Long bookingId;
     private boolean isLateCheckin;
     private LocalDateTime earliestExpectedCheckin;

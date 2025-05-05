@@ -13,6 +13,10 @@ java {
 	}
 }
 
+springBoot {
+	mainClass = 'codegym.c10.hotel.HotelManagementBackendApplication'
+}
+
 configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
@@ -62,6 +66,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 
+	// Hibernate Envers for entity auditing
+	implementation 'org.hibernate:hibernate-envers:6.6.1.Final'
 }
 
 tasks.named('test') {
