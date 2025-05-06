@@ -325,7 +325,7 @@ public class RoomController {
 
             for (BookingDetail detail : bookingDetails) {
                 SimpleBookingDetailDTO bookingDTO = new SimpleBookingDetailDTO();
-
+                
                 bookingDTO.setId(detail.getId());
                 bookingDTO.setRoomStatusInBooking(detail.getRoomStatus());
                 bookingDTO.setCheckinTime(detail.getCheckinTime());

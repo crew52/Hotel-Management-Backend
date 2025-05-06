@@ -37,7 +37,4 @@ public interface IRoomRepository extends JpaRepository<Room, Long> {
 
     Optional<Room> findByIdAndStatusAndIsCleanTrueAndDeletedFalse(Long id, RoomStatus status);
     boolean existsByRoomCategory(RoomCategory roomCategory);
-
-
-    List<Room> findAllByDeletedFalse();
 }
