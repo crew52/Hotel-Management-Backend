@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Data
 public class SimpleBookingDetailDTO {
     private Long id;
+    private Long bookingId;
     private RoomStatus roomStatusInBooking;
     private LocalDateTime checkinTime;
     private LocalDateTime checkoutTime;
