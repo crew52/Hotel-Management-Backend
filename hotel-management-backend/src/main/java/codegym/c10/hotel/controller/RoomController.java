@@ -330,7 +330,7 @@ public class RoomController {
                 bookingDTO.setRoomStatusInBooking(detail.getRoomStatus());
                 bookingDTO.setCheckinTime(detail.getCheckinTime());
                 bookingDTO.setCheckoutTime(detail.getCheckoutTime());
-
+                bookingDTO.setBookingId(detail.getBooking().getId());
                 bookingDTOs.add(bookingDTO);
             }
 

@@ -68,8 +68,12 @@ public interface IBookingDetailsRepository extends JpaRepository<BookingDetail, 
             @Param("status") BookingDetailStatus status
     );
 
-
-   
+/**
+   Truy vấn tất cả booking details đang active cho một phòng cụ thể
+   Sử dụng JOIN FETCH để tải trước các đối tượng liên quan (eager loading), tránh N+1 query problem
+   Chỉ lấy các booking có trạng thái 'BOOKED' hoặc 'IN_USE'
+   Sắp xếp kết quả theo thời gian check-in tăng dần (sớm nhất trước)
+   Tham số statuses cho phép linh hoạt chọn trạng thái cần lấy */
     @Query("SELECT bd FROM BookingDetail bd " +
             "JOIN FETCH bd.room r " +
             "JOIN FETCH r.roomCategory rc " +
