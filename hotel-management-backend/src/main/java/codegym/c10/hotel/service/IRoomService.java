@@ -5,6 +5,7 @@ import codegym.c10.hotel.entity.Room;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface IRoomService extends IGenerateService<Room>{
@@ -14,4 +15,5 @@ public interface IRoomService extends IGenerateService<Room>{
     Optional<Room> findByIdAndStatusAndIsCleanTrueAndDeletedFalse(Long id);
     Room updateRoomStatus(Long id, RoomStatus status);
     Room updateRoomCleaningStatus(Long id);
+    List<Room> findAllNoPage();
 }

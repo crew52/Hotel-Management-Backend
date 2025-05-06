@@ -69,17 +69,14 @@ public interface IBookingDetailsRepository extends JpaRepository<BookingDetail, 
     );
 
 
-   
     @Query("SELECT bd FROM BookingDetail bd " +
             "JOIN FETCH bd.room r " +
             "JOIN FETCH r.roomCategory rc " +
             "JOIN FETCH bd.booking b " +
             "WHERE bd.room.id = :roomId " +
-            "AND bd.status IN (:statuses) " +
+            "AND bd.status IN ('BOOKED', 'IN_USE') " +
             "ORDER BY bd.checkinTime ASC")
-    List<BookingDetail> findActiveByRoomId(
-            @Param("roomId") Long roomId,
-            @Param("statuses") List<BookingDetailStatus> statuses);
+    List<BookingDetail> findActiveByRoomId(@Param("roomId") Long roomId);
 
     Optional<BookingDetail> findByIdAndDeletedFalse(Long id);
 }

@@ -1,13 +1,11 @@
 package codegym.c10.hotel.service.bookingdetail;
 
-import codegym.c10.hotel.eNum.BookingDetailStatus;
 import codegym.c10.hotel.entity.BookingDetail;
 import codegym.c10.hotel.repository.IBookingDetailsRepository;
 import codegym.c10.hotel.repository.IBookingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,12 +35,6 @@ public class BookingDetailsServiceImpl implements IBookingDetailsService{
 
     }
 
-    @Override
-    public List<BookingDetail> findActiveBookingDetailsByRoomId(Long roomId) {
-        return bookingDetailsRepository.findActiveByRoomId(
-                roomId,
-                Arrays.asList(BookingDetailStatus.BOOKED, BookingDetailStatus.IN_USE)
-        );
-    }
 
+    
 }
