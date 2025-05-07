@@ -235,4 +235,74 @@ public class BookingServiceImpl implements IBookingService {
         response.setFailedRoomIds(failedRoomIds);
         return response;
     }
+
+    /**
+     * Performs the cancellation process for specific rooms in a booking.
+     *
+     * @param request CheckinRequestDTO containing booking ID and room IDs to cancel
+     * @return CheckinResponseDTO containing the cancellation results (similar structure to check-in)
+     * @throws ResponseStatusException if the booking does not exist
+     */
+    @Override
+    @LogActivity(action = "ROOM_CANCEL", description = "Hủy nhận phòng cho khách hàng")
+    public CheckinResponseDTO cancelRooms(CheckinRequestDTO request) {
+        Optional<Booking> bookingOpt = bookingRepository.findByIdAndDeletedFalse(request.getBookingId());
+        if (bookingOpt.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Booking không tồn tại");
+        }
+
+        Booking booking = bookingOpt.get();
+
+        List<Long> cancelledRoomIds = new ArrayList<>();
+        List<Long> failedRoomIds = new ArrayList<>();
+
+        // Consider renaming roomIdsToCheckin in CheckinRequestDTO if it's reused,
+        // or create a specific CancelRequestDTO for clarity.
+        for (Long roomIdToCancel : request.getRoomIdsToCheckin()) {
+            Optional<BookingDetail> matchingDetailOpt = booking.getBookingDetails().stream()
+                    .filter(detail -> detail.getRoom() != null && detail.getRoom().getId().equals(roomIdToCancel))
+                    .findFirst();
+
+            if (matchingDetailOpt.isPresent()) {
+                BookingDetail detail = matchingDetailOpt.get();
+                Room room = detail.getRoom(); // Get the associated Room entity
+
+                // Check if the current status allows cancellation
+                if (detail.getStatus() == BookingDetailStatus.BOOKED || detail.getStatus() == BookingDetailStatus.IN_USE) {
+                    detail.setStatus(BookingDetailStatus.CANCELLED); // Set BookingDetail status
+                    // detail.setRoomStatus(RoomStatus.AVAILABLE); // This field on BookingDetail might be redundant if Room.status is the source of truth
+
+                    if (detail != null) {
+                        detail.setRoomStatus(RoomStatus.AVAILABLE); // CRITICAL: Set actual Room entity status
+                        // If Room is not managed by JPA in this transaction, you might need roomRepository.save(room)
+                        // However, if Booking aggregates BookingDetail and BookingDetail aggregates Room with proper cascade,
+                        // bookingRepository.save(booking) might be enough. This depends on your entity relationships and cascading rules.
+                    } else {
+                        // This case should ideally not happen if filter `detail.getRoom() != null` is effective
+                        // Or if data integrity ensures Room is always present for a BookingDetail.
+                        // Handle error or log if room is unexpectedly null for a cancellable BookingDetail.
+                        failedRoomIds.add(roomIdToCancel);
+                        continue; // Skip to next room
+                    }
+                    cancelledRoomIds.add(roomIdToCancel);
+                } else {
+                    // Room cannot be cancelled due to its current BookingDetail status (e.g., already COMPLETED or CANCELLED)
+                    failedRoomIds.add(roomIdToCancel);
+                }
+            } else {
+                // Room not found within this booking's details
+                failedRoomIds.add(roomIdToCancel);
+            }
+        }
+
+        bookingRepository.save(booking); // Save changes to booking and potentially cascaded entities
+
+        CheckinResponseDTO response = new CheckinResponseDTO();
+        response.setBookingId(booking.getId());
+        // Consider renaming fields in CheckinResponseDTO for this cancel operation
+        // e.g., setSuccessfullyCancelledRoomIds instead of setCheckedInRoomIds
+        response.setCheckedInRoomIds(cancelledRoomIds);
+        response.setFailedRoomIds(failedRoomIds);
+        return response;
+    }
 }
