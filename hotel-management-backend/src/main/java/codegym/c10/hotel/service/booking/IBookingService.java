@@ -11,4 +11,5 @@ public interface IBookingService {
     Optional<Booking> findByIdAndDeletedFalse(Long id);
     LateCheckinStatusDTO getLateCheckinStatus(Long id);
     CheckinResponseDTO checkinRooms(CheckinRequestDTO request);
+    CheckinResponseDTO cancelRooms(CheckinRequestDTO request);
 }

@@ -165,6 +165,48 @@ public class CheckinController {
         }
     }
 
+    /**
+     * API endpoint to cancel check-in for guests with existing reservations.
+     *
+     * <p>
+     * Updates room statuses from "occupied" or "reserved" to "AVAILABLE".
+     * </p>
+     *
+     * <p>
+     * Response:
+     * <ul>
+     *     <li>200 OK if cancellation was successful (either fully or partially).</li>
+     *     <li>400 Bad Request if booking ID is not found.</li>
+     *     <li>500 Internal Server Error for unexpected errors.</li>
+     * </ul>
+     * </p>
+     *
+     * @param request Object containing booking ID and list of room IDs to cancel.
+     * @return Response with successfully cancelled rooms and failed ones if any.
+     */
+    @PostMapping("/checkins/cancelled")
+    public ResponseEntity<?> cancelCheckinRooms(@RequestBody CheckinRequestDTO request) {
+        try {
+            // Assuming a similar response DTO or a generic one can be used.
+            // This service method will need to be created in BookingServiceImpl
+            CheckinResponseDTO response = bookingService.cancelRooms(request);
+            return ResponseEntity.ok(response);
+        } catch (ResponseStatusException ex) {
+            ErrorResponse errorResponse = new ErrorResponse(
+                    ex.getReason(),
+                    Map.of("bookingId", "Không tìm thấy booking với ID: " + request.getBookingId())
+            );
+            return ResponseEntity
+                    .status(ex.getStatusCode())
+                    .body(errorResponse);
+        } catch (Exception ex) {
+            ErrorResponse errorResponse = new ErrorResponse("Lỗi hệ thống", Map.of("detail", ex.getMessage()));
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(errorResponse);
+        }
+    }
+
     @GetMapping("/checkins/{id}/receipt")
     public ResponseEntity<BookingResponseDTO> getReceipt(@PathVariable Long id) {
         BookingResponseDTO bookingResponse = bookingService.getBookingResponse(id);
